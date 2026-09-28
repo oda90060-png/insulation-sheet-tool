@@ -1,0 +1,1046 @@
+<meta charset="utf-8">
+<title>盤図から絶縁測定表</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F3F4F1; --panel:#FFFFFF; --soft:#E9ECE5; --ink:#1B222B; --muted:#5E6772; --line:#D3D8CF;
+  --accent:#B7521B; --accent-ink:#FFFFFF; --accent-soft:#F6E4D8;
+  --good:#2E7D4F; --bad:#B3261E; --warn:#9A6B00;
+  --font:"Zen Kaku Gothic New","Meiryo","Hiragino Sans","Yu Gothic",sans-serif;
+  --mono:"IBM Plex Mono","Consolas",monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#14181D; --panel:#1C2229; --soft:#232B33; --ink:#E7E9E4; --muted:#9AA3AD; --line:#313A44;
+    --accent:#E48A55; --accent-ink:#1B1310; --accent-soft:#3A2A21; --good:#6CC08B; --bad:#F08A80; --warn:#E3B34C;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14181D; --panel:#1C2229; --soft:#232B33; --ink:#E7E9E4; --muted:#9AA3AD; --line:#313A44;
+  --accent:#E48A55; --accent-ink:#1B1310; --accent-soft:#3A2A21; --good:#6CC08B; --bad:#F08A80; --warn:#E3B34C;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.55;margin:0;padding:0 16px;padding-block:0 40px}
+.wrap{max-width:1120px;margin:0 auto}
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-block:22px 14px;border-bottom:1px solid var(--line)}
+h1{font-size:22px;font-weight:700;margin:0;letter-spacing:.01em;text-wrap:balance}
+h1 small{display:block;font-size:12px;font-weight:500;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.steps{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.steps span{padding:3px 9px;border:1px solid var(--line);border-radius:999px;background:var(--panel)}
+.steps span.on{border-color:var(--accent);color:var(--accent);font-weight:500}
+main{display:grid;grid-template-columns:340px 1fr;gap:20px;padding-block:20px}
+@media (max-width:820px){main{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.card h2{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--muted);margin:0 0 12px}
+.drop{border:2px dashed var(--line);border-radius:10px;padding:22px 14px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop strong{display:block;font-size:15px;margin-bottom:4px}
+.drop span{color:var(--muted);font-size:12px}
+.drop input{display:none}
+.field{display:flex;flex-direction:column;gap:4px;margin-top:12px}
+.field label{font-size:12px;color:var(--muted);font-weight:500}
+.field input[type=text],.field select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%}
+.field input:focus,.field select:focus,button:focus-visible,.drop:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.check{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px}
+.check input{width:16px;height:16px;accent-color:var(--accent)}
+.btns{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+button{font:inherit;font-weight:500;border-radius:8px;border:1px solid var(--line);background:var(--soft);color:var(--ink);padding:10px 14px;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:8px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+button:disabled{opacity:.45;cursor:not-allowed}
+button .sub{font-size:11px;font-weight:400;opacity:.8}
+.prog{height:6px;background:var(--soft);border-radius:3px;overflow:hidden;margin-top:12px}
+.prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+.status{font-size:12px;color:var(--muted);margin-top:6px;min-height:18px}
+.status.err{color:var(--bad)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px}
+.stat{padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.stat b{display:block;font-family:var(--mono);font-size:22px;font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:11px;color:var(--muted);letter-spacing:.04em}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:10px;flex-wrap:wrap}
+.tabs button{border:0;background:none;border-radius:6px 6px 0 0;padding:7px 12px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:720px}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;white-space:nowrap}
+th{position:sticky;top:0;background:var(--soft);font-weight:700;font-size:11.5px;letter-spacing:.04em;color:var(--muted)}
+td.num,th.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr.sec td{background:var(--accent-soft);font-weight:700;color:var(--ink)}
+tr.pnl td{background:var(--soft);font-weight:700}
+tr.main td{background:color-mix(in srgb,var(--warn) 12%,var(--panel))}
+.pill{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11px;background:var(--soft);color:var(--muted)}
+.pill.L{background:#E3EEF9;color:#1F4E82}.pill.P{background:#E6F2E8;color:#1F5E33}.pill.H{background:#F9E3E3;color:#7A1F1F}
+:root[data-theme="dark"] .pill.L,:root:not([data-theme="light"]) .pill.L{background:#22344A;color:#9CC4EE}
+.tip{font-size:12px;color:var(--muted);margin-top:10px}
+.tip code{font-family:var(--mono);font-size:11.5px;background:var(--soft);padding:1px 5px;border-radius:4px}
+.example{font-size:11px;color:var(--warn);font-weight:500;letter-spacing:.06em}
+.issues{margin:0;padding-left:18px;font-size:12px;color:var(--muted)}
+details{margin-top:14px;font-size:12px;color:var(--muted)}
+details summary{cursor:pointer;font-weight:500}
+td.sup{color:var(--muted);font-size:11.5px;max-width:150px;overflow:hidden;text-overflow:ellipsis}
+td.ed{cursor:text;min-width:44px}
+td.ed:focus{outline:2px solid var(--accent);outline-offset:-2px;background:var(--accent-soft);white-space:normal;min-width:120px}
+td.act{white-space:nowrap}
+td.act button{display:inline-block;padding:1px 6px;font-size:11px;line-height:1.4;border-radius:4px;margin-right:2px;background:var(--panel)}
+td.act button:hover{border-color:var(--accent);color:var(--accent)}
+tr.hid{display:none}
+tr.spare td{color:var(--muted)}
+.pname[contenteditable]{padding:0 4px;border-bottom:1px dashed var(--muted);cursor:text}
+.pname[contenteditable]:focus{outline:2px solid var(--accent);outline-offset:-1px;background:var(--panel)}
+.toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}
+.toolbar button{padding:5px 10px;font-size:12px;background:var(--panel)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <h1><small>Insulation test sheet builder</small>盤図から絶縁測定表</h1>
+  <div class="steps"><span id="st1" class="on">1 盤図PDFを読み込む</span><span id="st2">2 回路を確認</span><span id="st3">3 Excelを保存</span></div>
+</header>
+
+<main>
+<aside>
+  <div class="card">
+    <h2>盤図 (納入仕様書 PDF)</h2>
+    <label class="drop" id="drop" tabindex="0">
+      <input type="file" id="file" accept="application/pdf,.pdf" multiple>
+      <strong>PDFをここにドロップ(複数可)</strong>
+      <span>またはクリックして選択。同じ物件の分電盤・動力盤の単線結線図とキュービクル(受変電設備)の結線図は、まとめて読み込めます。別物件は1件ずつ読み込んでください。</span>
+    </label>
+    <div class="prog"><i id="bar"></i></div>
+    <div class="status" id="status">まだ読み込んでいません。</div>
+
+    <div class="field"><label for="proj">工事名称</label><input type="text" id="proj" placeholder="PDFから自動取得"></div>
+    <div class="row2">
+      <div class="field"><label for="mvL">測定電圧 電灯 (V)</label><select id="mvL"><option>250</option><option>500</option></select></div>
+      <div class="field"><label for="mvP">測定電圧 動力 (V)</label><select id="mvP"><option>500</option><option>250</option><option>1000</option></select></div>
+    </div>
+    <label class="check"><input type="checkbox" id="hv" checked>受変電設備図がない場合、高圧の雛形ページを先頭に付ける</label>
+    <label class="check"><input type="checkbox" id="spare" checked>番号なしの「予備」回路も載せる</label>
+
+    <div class="btns">
+      <button class="primary" id="dlList" disabled><span>一覧版を保存 <span class="sub">1シート・盤ごと改ページ・判定式付き</span></span><span>.xlsx</span></button>
+      <button class="primary" id="dlHouse" disabled><span>社内書式版を保存 <span class="sub">1シート・A4横・8回路/ページ</span></span><span>.xlsx</span></button>
+    </div>
+    <div class="status" id="dlstatus"></div>
+    <details id="tsv" hidden>
+      <summary>コピー用テキスト(Excelに貼り付け)</summary>
+      <div class="tip">保存ができない環境向け。下のテキストをコピーしてExcelのA1セルに貼り付けると一覧版と同じ内容になります(書式なし)。</div>
+      <button type="button" id="tsvCopy" style="margin-top:6px">クリップボードにコピー</button>
+      <div class="status" id="tsvNote"></div>
+      <textarea id="tsvText" readonly style="width:100%;height:120px;font:11px var(--mono);margin-top:6px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px"></textarea>
+    </details>
+    <div class="tip">判定基準は電技58条(対地電圧150V以下 0.1MΩ / 300V以下 0.2MΩ)。1φ3W 200-100V回路は100V・200Vとも0.1MΩ、3φ200Vは0.2MΩを自動設定します。</div>
+  </div>
+</aside>
+
+<section>
+  <div class="card">
+    <h2>抽出結果</h2>
+    <div class="stats">
+      <div class="stat"><b id="nPanel">–</b><span>盤</span></div>
+      <div class="stat"><b id="nLight">–</b><span>低圧電灯 回路</span></div>
+      <div class="stat"><b id="nPower">–</b><span>低圧動力 回路</span></div>
+      <div class="stat"><b id="nPage">–</b><span>結線図ページ</span></div>
+    </div>
+    <div class="tabs" id="tabs"></div>
+    <div class="toolbar"><span class="tip" style="margin:0">セルをクリックして修正。＋ 行追加 / ↑↓ 並べ替え / × 削除。盤名も修正できます。</span><button type="button" id="reset" title="画面での修正を破棄して抽出結果に戻す">抽出結果に戻す</button></div>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>区分</th><th>電源系統</th><th class="num">回路</th><th>負荷名称</th><th>遮断器</th><th class="num">V</th><th class="num">容量</th><th>ケーブル</th><th>備考</th><th>操作</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="tip" id="tblnote"></div>
+    <details id="issues"><summary>読み飛ばしたページ・注意</summary><ul class="issues" id="issueList"></ul></details>
+  </div>
+</section>
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script>
+/* ===================== embedded in-house template block (30 rows x 57 cols) ===================== */
+const TEMPLATE = {"colw": {"A": 2.5703125, "B": null, "C": null, "D": null, "E": null, "F": null, "G": null, "H": null, "I": null, "J": null, "K": null, "L": null, "M": null, "N": null, "O": null, "P": null, "Q": null, "R": null, "S": null, "T": null, "U": null, "V": null, "W": null, "X": null, "Y": null, "Z": null, "AA": null, "AB": null, "AC": null, "AD": null, "AE": null, "AF": null, "AG": null, "AH": null, "AI": null, "AJ": null, "AK": null, "AL": null, "AM": null, "AN": null, "AO": null, "AP": null, "AQ": null, "AR": null, "AS": null, "AT": null, "AU": null, "AV": null, "AW": null, "AX": null, "AY": null, "AZ": null, "BA": null, "BB": null, "BC": null, "BD": null, "BE": null}, "rowh": {"1": 18.0, "2": 18.0, "3": 22.5, "4": 22.5, "5": 23.1, "6": 23.1, "7": 23.1, "8": 23.1, "9": 23.1, "10": 23.1, "11": 23.1, "12": 23.1, "13": 23.1, "14": 23.1, "15": 23.1, "16": 23.1, "17": 23.1, "18": 23.1, "19": 23.1, "20": 23.1, "21": 15.0, "22": 15.0, "23": 15.0, "24": 15.0, "25": 15.0, "26": 15.0, "27": 18.0, "28": 28.5, "29": 15.0, "30": 15.0}, "merges": [[25, 27, 31, 27], [33, 15, 35, 16], [15, 4, 17, 4], [4, 3, 14, 4], [15, 13, 17, 14], [18, 9, 20, 10], [27, 4, 29, 4], [27, 11, 29, 12], [36, 9, 38, 10], [1, 15, 3, 16], [27, 13, 29, 14], [24, 17, 26, 18], [42, 3, 44, 4], [4, 9, 14, 10], [24, 11, 26, 12], [12, 27, 24, 27], [1, 27, 1, 28], [15, 15, 17, 16], [18, 11, 20, 12], [1, 1, 3, 2], [30, 5, 32, 6], [42, 9, 44, 10], [18, 13, 20, 14], [42, 5, 44, 6], [30, 13, 32, 14], [1, 7, 3, 8], [45, 7, 57, 8], [27, 2, 35, 2], [18, 15, 20, 16], [39, 28, 45, 28], [12, 28, 24, 28], [30, 15, 32, 16], [36, 13, 38, 14], [33, 17, 35, 18], [42, 15, 44, 16], [36, 15, 38, 16], [52, 28, 57, 28], [33, 19, 35, 20], [18, 4, 20, 4], [19, 1, 23, 1], [15, 17, 17, 18], [1, 21, 28, 21], [42, 7, 44, 8], [33, 5, 35, 6], [15, 19, 17, 20], [1, 3, 3, 3], [15, 9, 17, 10], [21, 3, 23, 3], [24, 3, 41, 3], [30, 17, 32, 18], [39, 27, 45, 27], [32, 28, 38, 28], [4, 1, 18, 2], [18, 3, 20, 3], [45, 11, 57, 12], [21, 15, 23, 16], [18, 19, 20, 20], [15, 5, 17, 6], [39, 4, 41, 4], [30, 19, 32, 20], [4, 5, 14, 6], [39, 13, 41, 14], [1, 4, 3, 4], [36, 17, 38, 18], [39, 19, 41, 20], [27, 15, 29, 16], [24, 19, 26, 20], [21, 7, 23, 8], [36, 19, 38, 20], [45, 13, 57, 14], [18, 17, 20, 18], [42, 19, 44, 20], [27, 7, 29, 8], [36, 2, 38, 2], [45, 15, 57, 16], [39, 7, 41, 8], [36, 5, 38, 6], [1, 17, 3, 18], [25, 28, 31, 28], [30, 7, 32, 8], [1, 19, 3, 20], [21, 19, 23, 20], [27, 17, 29, 18], [1, 9, 3, 10], [21, 9, 23, 10], [45, 9, 57, 10], [39, 17, 41, 18], [19, 2, 23, 2], [1, 11, 3, 12], [21, 11, 23, 12], [27, 9, 29, 10], [18, 7, 20, 8], [24, 1, 26, 1], [39, 9, 41, 10], [27, 19, 29, 20], [4, 19, 14, 20], [24, 22, 28, 25], [1, 22, 23, 25], [27, 5, 29, 6], [21, 4, 23, 4], [21, 13, 23, 14], [33, 4, 35, 4], [33, 13, 35, 14], [24, 2, 26, 2], [33, 7, 35, 8], [30, 11, 32, 12], [24, 5, 26, 6], [39, 15, 41, 16], [42, 11, 44, 12], [1, 13, 3, 14], [46, 27, 51, 27], [15, 11, 17, 12], [24, 9, 26, 10], [15, 7, 17, 8], [4, 13, 14, 14], [4, 7, 14, 8], [18, 5, 20, 6], [30, 9, 32, 10], [42, 13, 44, 14], [4, 15, 14, 16], [32, 27, 38, 27], [52, 27, 57, 27], [24, 4, 26, 4], [33, 9, 35, 10], [24, 13, 26, 14], [36, 4, 38, 4], [24, 7, 26, 8], [36, 11, 38, 12], [21, 17, 23, 18], [45, 17, 57, 18], [36, 7, 38, 8], [33, 11, 35, 12], [27, 1, 57, 1], [2, 27, 11, 27], [30, 4, 32, 4], [24, 15, 26, 16], [39, 5, 41, 6], [45, 19, 57, 20], [15, 3, 17, 3], [45, 3, 57, 4], [39, 11, 41, 12], [46, 28, 51, 28], [1, 5, 3, 6], [4, 17, 14, 18], [21, 5, 23, 6], [45, 5, 57, 6], [4, 11, 14, 12], [2, 28, 11, 28], [29, 21, 57, 21], [42, 17, 44, 18]], "styles": [["ＭＳ 明朝", 12.0, false, "center", "center", false, false, "medium", "", "medium", "", "@", ""], ["Calibri", 11.0, false, "", "", false, false, "", "", "medium", "", "General", ""], ["ＭＳ 明朝", 14.0, false, "center", "center", false, false, "thin", "thin", "medium", "double", "@", ""], ["Calibri", 11.0, false, "", "", false, false, "", "thin", "medium", "", "General", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "thin", "thin", "medium", "hair", "General", "FFFFFF00"], ["Calibri", 11.0, false, "", "", false, false, "", "", "medium", "hair", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "thin", "medium", "hair", "General", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "thin", "thin", "medium", "thin", "@", ""], ["Calibri", 11.0, false, "", "", false, false, "", "", "medium", "thin", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "thin", "medium", "thin", "General", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "", "medium", "medium", "thin", "@", ""], ["Calibri", 11.0, false, "", "", false, false, "", "medium", "medium", "thin", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "medium", "", "", "", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "", "", "", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "thin", "", "", "double", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "", "", "double", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "thin", "", "double", "General", ""], ["ＭＳ 明朝", 14.0, false, "center", "center", false, false, "thin", "thin", "hair", "double", "@", "FF00B0F0"], ["Calibri", 11.0, false, "", "", false, false, "", "", "hair", "double", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "thin", "hair", "double", "General", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "thin", "thin", "thin", "double", "@", ""], ["Calibri", 11.0, false, "", "", false, false, "", "", "thin", "double", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "thin", "thin", "double", "General", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "", "thin", "thin", "double", "@", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "thin", "thin", "thin", "double", "@", "FFFFFF00"], ["ＭＳ 明朝", 9.0, false, "", "center", false, false, "", "", "", "", "@", "FF00B0F0"], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "", "", "", "", "@", "FF00B0F0"], ["ＭＳ 明朝", 9.0, false, "left", "center", false, false, "", "", "", "", "@", "FF00B0F0"], ["ＭＳ 明朝", 9.0, false, "right", "center", false, false, "", "", "", "", "@", "FF00B0F0"], ["ＭＳ 明朝", 9.0, false, "", "center", false, false, "", "medium", "", "", "@", "FF00B0F0"], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "medium", "medium", "double", "", "General", "FFFFFF00"], ["Calibri", 11.0, false, "", "", false, false, "", "", "double", "", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "medium", "double", "", "General", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "medium", "thin", "double", "medium", "General", "FFFFFF00"], ["Calibri", 11.0, false, "", "", false, false, "", "thin", "double", "", "General", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "", "thin", "double", "", "General", "FFFFFF00"], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "thin", "thin", "double", "", "General", "FFFFFF00"], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "thin", "thin", "double", "thin", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "", "double", "thin", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "thin", "double", "thin", "General", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "thin", "thin", "double", "medium", "General", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "thin", "medium", "double", "medium", "General", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "medium", "medium", "", "medium", "General", "FFFFFF00"], ["Calibri", 11.0, false, "", "", false, false, "", "", "", "medium", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "medium", "", "medium", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "medium", "", "", "medium", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "thin", "", "medium", "General", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "", "thin", "", "medium", "General", "FFFFFF00"], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "thin", "thin", "", "medium", "General", "FFFFFF00"], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "thin", "thin", "thin", "medium", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "", "thin", "medium", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "thin", "thin", "medium", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "thin", "", "", "medium", "General", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "medium", "thin", "medium", "thin", "General", "FF00B0F0"], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "thin", "thin", "medium", "thin", "General", "FF00B0F0"], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "thin", "thin", "medium", "thin", "General", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "thin", "medium", "medium", "thin", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "medium", "medium", "", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "medium", "", "", "thin", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "", "", "thin", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "thin", "", "thin", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "thin", "", "", "thin", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "medium", "", "thin", "General", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "medium", "thin", "thin", "thin", "General", "FF00B0F0"], ["Calibri", 11.0, false, "", "", false, false, "", "", "thin", "", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "thin", "thin", "", "General", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "thin", "thin", "thin", "thin", "General", "FF00B0F0"], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "thin", "thin", "thin", "thin", "General", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "thin", "medium", "thin", "thin", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "medium", "thin", "", "General", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "medium", "thin", "thin", "medium", "General", "FF00B0F0"], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "thin", "thin", "thin", "medium", "General", "FF00B0F0"], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "medium", "medium", "medium", "thin", "General", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "", "medium", "medium", "thin", "General", ""], ["ＭＳ 明朝", 9.0, false, "left", "center", true, false, "medium", "", "thin", "", "General", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", true, false, "", "medium", "thin", "", "General", ""], ["ＭＳ 明朝", 9.0, false, "", "center", false, false, "", "", "", "", "General", ""], ["ＭＳ 明朝", 9.0, false, "", "center", true, false, "", "", "", "", "General", ""], ["ＭＳ 明朝", 9.0, false, "", "center", true, false, "", "medium", "", "", "General", ""], ["Calibri", 11.0, false, "", "", false, false, "", "medium", "", "", "General", ""], ["ＭＳ 明朝", 9.0, false, "", "center", false, false, "", "", "", "", "@", ""], ["ＭＳ 明朝", 9.0, false, "", "center", false, false, "medium", "", "", "medium", "General", ""], ["ＭＳ 明朝", 9.0, false, "", "center", false, false, "", "", "", "medium", "General", ""], ["ＭＳ 明朝", 9.0, false, "", "center", false, false, "", "medium", "", "medium", "General", ""], ["ＭＳ 明朝", 9.0, false, "", "center", false, false, "", "medium", "", "", "General", ""], ["ＭＳ 明朝", 8.0, false, "center", "center", false, false, "medium", "medium", "medium", "medium", "@", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "medium", "thin", "medium", "thin", "@", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "thin", "medium", "medium", "thin", "@", ""], ["Calibri", 11.0, false, "", "", false, false, "medium", "medium", "", "medium", "General", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "medium", "thin", "thin", "medium", "@", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "thin", "thin", "thin", "medium", "@", ""], ["ＭＳ 明朝", 9.0, false, "center", "center", false, false, "thin", "medium", "thin", "medium", "@", ""], ["Calibri", 11.0, false, "", "", false, false, "", "medium", "thin", "medium", "General", ""], ["ＭＳ 明朝", 9.0, false, "left", "center", false, false, "", "", "", "", "General", ""]], "cells": [[1, 1, 0, "Ａ４"], [1, 2, 1, null], [1, 3, 1, null], [1, 4, 2, "動力回路絶縁抵抗測定表 "], [1, 5, 1, null], [1, 6, 1, null], [1, 7, 1, null], [1, 8, 1, null], [1, 9, 1, null], [1, 10, 1, null], [1, 11, 1, null], [1, 12, 1, null], [1, 13, 1, null], [1, 14, 1, null], [1, 15, 1, null], [1, 16, 1, null], [1, 17, 1, null], [1, 18, 3, null], [1, 19, 4, "盤　名　称"], [1, 20, 5, null], [1, 21, 5, null], [1, 22, 5, null], [1, 23, 6, null], [1, 24, 7, "立会者"], [1, 25, 8, null], [1, 26, 9, null], [1, 27, 10, null], [1, 28, 8, null], [1, 29, 8, null], [1, 30, 8, null], [1, 31, 8, null], [1, 32, 8, null], [1, 33, 8, null], [1, 34, 8, null], [1, 35, 8, null], [1, 36, 8, null], [1, 37, 8, null], [1, 38, 8, null], [1, 39, 8, null], [1, 40, 8, null], [1, 41, 8, null], [1, 42, 8, null], [1, 43, 8, null], [1, 44, 8, null], [1, 45, 8, null], [1, 46, 8, null], [1, 47, 8, null], [1, 48, 8, null], [1, 49, 8, null], [1, 50, 8, null], [1, 51, 8, null], [1, 52, 8, null], [1, 53, 8, null], [1, 54, 8, null], [1, 55, 8, null], [1, 56, 8, null], [1, 57, 11, null], [2, 1, 12, null], [2, 2, 13, null], [2, 3, 13, null], [2, 4, 14, null], [2, 5, 15, null], [2, 6, 15, null], [2, 7, 15, null], [2, 8, 15, null], [2, 9, 15, null], [2, 10, 15, null], [2, 11, 15, null], [2, 12, 15, null], [2, 13, 15, null], [2, 14, 15, null], [2, 15, 15, null], [2, 16, 15, null], [2, 17, 15, null], [2, 18, 16, null], [2, 19, 17, "表紙"], [2, 20, 18, null], [2, 21, 18, null], [2, 22, 18, null], [2, 23, 19, null], [2, 24, 20, "実施者"], [2, 25, 21, null], [2, 26, 22, null], [2, 27, 23, "・"], [2, 28, 21, null], [2, 29, 21, null], [2, 30, 21, null], [2, 31, 21, null], [2, 32, 21, null], [2, 33, 21, null], [2, 34, 21, null], [2, 35, 22, null], [2, 36, 24, "実施日"], [2, 37, 21, null], [2, 38, 22, null], [2, 39, 25, "　令和　　年　　月　　日"], [2, 40, 26, null], [2, 41, 27, null], [2, 42, 25, null], [2, 43, 25, null], [2, 44, 25, null], [2, 45, 25, null], [2, 46, 25, null], [2, 47, 25, null], [2, 48, 28, "天候"], [2, 49, 26, null], [2, 50, 25, null], [2, 51, 28, "温度"], [2, 52, 28, null], [2, 53, 25, "℃"], [2, 54, 25, null], [2, 55, 28, "湿度"], [2, 56, 28, null], [2, 57, 29, "％"], [3, 1, 30, "回路"], [3, 2, 31, null], [3, 3, 32, null], [3, 4, 33, "負　　荷　　名　　称"], [3, 5, 31, null], [3, 6, 31, null], [3, 7, 31, null], [3, 8, 31, null], [3, 9, 31, null], [3, 10, 31, null], [3, 11, 31, null], [3, 12, 31, null], [3, 13, 31, null], [3, 14, 34, null], [3, 15, 35, "ケーブル"], [3, 16, 31, null], [3, 17, 34, null], [3, 18, 35, "電　圧"], [3, 19, 31, null], [3, 20, 34, null], [3, 21, 36, "容　量"], [3, 22, 31, null], [3, 23, 34, null], [3, 24, 37, "絶　　　縁　　　抵　　　抗　［ＭΩ］"], [3, 25, 38, null], [3, 26, 38, null], [3, 27, 38, null], [3, 28, 38, null], [3, 29, 38, null], [3, 30, 38, null], [3, 31, 38, null], [3, 32, 38, null], [3, 33, 38, null], [3, 34, 38, null], [3, 35, 38, null], [3, 36, 38, null], [3, 37, 38, null], [3, 38, 38, null], [3, 39, 38, null], [3, 40, 38, null], [3, 41, 39, null], [3, 42, 40, "判定結果"], [3, 43, 31, null], [3, 44, 34, null], [3, 45, 41, "備　　考"], [3, 46, 31, null], [3, 47, 31, null], [3, 48, 31, null], [3, 49, 31, null], [3, 50, 31, null], [3, 51, 31, null], [3, 52, 31, null], [3, 53, 31, null], [3, 54, 31, null], [3, 55, 31, null], [3, 56, 31, null], [3, 57, 32, null], [4, 1, 42, "番号"], [4, 2, 43, null], [4, 3, 44, null], [4, 4, 45, null], [4, 5, 43, null], [4, 6, 43, null], [4, 7, 43, null], [4, 8, 43, null], [4, 9, 43, null], [4, 10, 43, null], [4, 11, 43, null], [4, 12, 43, null], [4, 13, 43, null], [4, 14, 46, null], [4, 15, 47, "サイズ"], [4, 16, 43, null], [4, 17, 46, null], [4, 18, 47, "［Ｖ］"], [4, 19, 43, null], [4, 20, 46, null], [4, 21, 48, "［kW］"], [4, 22, 43, null], [4, 23, 46, null], [4, 24, 49, "Ｒ－Ｅ"], [4, 25, 50, null], [4, 26, 51, null], [4, 27, 49, "Ｓ－Ｅ"], [4, 28, 50, null], [4, 29, 51, null], [4, 30, 49, "Ｔ－Ｅ"], [4, 31, 50, null], [4, 32, 51, null], [4, 33, 49, "Ｒ－Ｓ"], [4, 34, 50, null], [4, 35, 51, null], [4, 36, 49, "Ｓ－Ｔ"], [4, 37, 50, null], [4, 38, 51, null], [4, 39, 49, "Ｔ－Ｒ"], [4, 40, 50, null], [4, 41, 51, null], [4, 42, 52, null], [4, 43, 43, null], [4, 44, 46, null], [4, 45, 52, null], [4, 46, 43, null], [4, 47, 43, null], [4, 48, 43, null], [4, 49, 43, null], [4, 50, 43, null], [4, 51, 43, null], [4, 52, 43, null], [4, 53, 43, null], [4, 54, 43, null], [4, 55, 43, null], [4, 56, 43, null], [4, 57, 44, null], [5, 1, 53, null], [5, 2, 1, null], [5, 3, 3, null], [5, 4, 54, null], [5, 5, 1, null], [5, 6, 1, null], [5, 7, 1, null], [5, 8, 1, null], [5, 9, 1, null], [5, 10, 1, null], [5, 11, 1, null], [5, 12, 1, null], [5, 13, 1, null], [5, 14, 3, null], [5, 15, 54, null], [5, 16, 1, null], [5, 17, 3, null], [5, 18, 54, null], [5, 19, 1, null], [5, 20, 3, null], [5, 21, 54, null], [5, 22, 1, null], [5, 23, 3, null], [5, 24, 55, null], [5, 25, 1, null], [5, 26, 3, null], [5, 27, 55, null], [5, 28, 1, null], [5, 29, 3, null], [5, 30, 55, null], [5, 31, 1, null], [5, 32, 3, null], [5, 33, 55, null], [5, 34, 1, null], [5, 35, 3, null], [5, 36, 55, null], [5, 37, 1, null], [5, 38, 3, null], [5, 39, 55, null], [5, 40, 1, null], [5, 41, 3, null], [5, 42, 55, null], [5, 43, 1, null], [5, 44, 3, null], [5, 45, 56, null], [5, 46, 1, null], [5, 47, 1, null], [5, 48, 1, null], [5, 49, 1, null], [5, 50, 1, null], [5, 51, 1, null], [5, 52, 1, null], [5, 53, 1, null], [5, 54, 1, null], [5, 55, 1, null], [5, 56, 1, null], [5, 57, 57, null], [6, 1, 58, null], [6, 2, 59, null], [6, 3, 60, null], [6, 4, 61, null], [6, 5, 59, null], [6, 6, 59, null], [6, 7, 59, null], [6, 8, 59, null], [6, 9, 59, null], [6, 10, 59, null], [6, 11, 59, null], [6, 12, 59, null], [6, 13, 59, null], [6, 14, 60, null], [6, 15, 61, null], [6, 16, 59, null], [6, 17, 60, null], [6, 18, 61, null], [6, 19, 59, null], [6, 20, 60, null], [6, 21, 61, null], [6, 22, 59, null], [6, 23, 60, null], [6, 24, 61, null], [6, 25, 59, null], [6, 26, 60, null], [6, 27, 61, null], [6, 28, 59, null], [6, 29, 60, null], [6, 30, 61, null], [6, 31, 59, null], [6, 32, 60, null], [6, 33, 61, null], [6, 34, 59, null], [6, 35, 60, null], [6, 36, 61, null], [6, 37, 59, null], [6, 38, 60, null], [6, 39, 61, null], [6, 40, 59, null], [6, 41, 60, null], [6, 42, 61, null], [6, 43, 59, null], [6, 44, 60, null], [6, 45, 61, null], [6, 46, 59, null], [6, 47, 59, null], [6, 48, 59, null], [6, 49, 59, null], [6, 50, 59, null], [6, 51, 59, null], [6, 52, 59, null], [6, 53, 59, null], [6, 54, 59, null], [6, 55, 59, null], [6, 56, 59, null], [6, 57, 62, null], [7, 1, 63, null], [7, 2, 64, null], [7, 3, 65, null], [7, 4, 66, null], [7, 5, 64, null], [7, 6, 64, null], [7, 7, 64, null], [7, 8, 64, null], [7, 9, 64, null], [7, 10, 64, null], [7, 11, 64, null], [7, 12, 64, null], [7, 13, 64, null], [7, 14, 65, null], [7, 15, 66, null], [7, 16, 64, null], [7, 17, 65, null], [7, 18, 66, null], [7, 19, 64, null], [7, 20, 65, null], [7, 21, 66, null], [7, 22, 64, null], [7, 23, 65, null], [7, 24, 67, null], [7, 25, 64, null], [7, 26, 65, null], [7, 27, 67, null], [7, 28, 64, null], [7, 29, 65, null], [7, 30, 67, null], [7, 31, 64, null], [7, 32, 65, null], [7, 33, 67, null], [7, 34, 64, null], [7, 35, 65, null], [7, 36, 67, null], [7, 37, 64, null], [7, 38, 65, null], [7, 39, 67, null], [7, 40, 64, null], [7, 41, 65, null], [7, 42, 67, null], [7, 43, 64, null], [7, 44, 65, null], [7, 45, 68, null], [7, 46, 64, null], [7, 47, 64, null], [7, 48, 64, null], [7, 49, 64, null], [7, 50, 64, null], [7, 51, 64, null], [7, 52, 64, null], [7, 53, 64, null], [7, 54, 64, null], [7, 55, 64, null], [7, 56, 64, null], [7, 57, 69, null], [8, 1, 58, null], [8, 2, 59, null], [8, 3, 60, null], [8, 4, 61, null], [8, 5, 59, null], [8, 6, 59, null], [8, 7, 59, null], [8, 8, 59, null], [8, 9, 59, null], [8, 10, 59, null], [8, 11, 59, null], [8, 12, 59, null], [8, 13, 59, null], [8, 14, 60, null], [8, 15, 61, null], [8, 16, 59, null], [8, 17, 60, null], [8, 18, 61, null], [8, 19, 59, null], [8, 20, 60, null], [8, 21, 61, null], [8, 22, 59, null], [8, 23, 60, null], [8, 24, 61, null], [8, 25, 59, null], [8, 26, 60, null], [8, 27, 61, null], [8, 28, 59, null], [8, 29, 60, null], [8, 30, 61, null], [8, 31, 59, null], [8, 32, 60, null], [8, 33, 61, null], [8, 34, 59, null], [8, 35, 60, null], [8, 36, 61, null], [8, 37, 59, null], [8, 38, 60, null], [8, 39, 61, null], [8, 40, 59, null], [8, 41, 60, null], [8, 42, 61, null], [8, 43, 59, null], [8, 44, 60, null], [8, 45, 61, null], [8, 46, 59, null], [8, 47, 59, null], [8, 48, 59, null], [8, 49, 59, null], [8, 50, 59, null], [8, 51, 59, null], [8, 52, 59, null], [8, 53, 59, null], [8, 54, 59, null], [8, 55, 59, null], [8, 56, 59, null], [8, 57, 62, null], [9, 1, 63, null], [9, 2, 64, null], [9, 3, 65, null], [9, 4, 66, null], [9, 5, 64, null], [9, 6, 64, null], [9, 7, 64, null], [9, 8, 64, null], [9, 9, 64, null], [9, 10, 64, null], [9, 11, 64, null], [9, 12, 64, null], [9, 13, 64, null], [9, 14, 65, null], [9, 15, 66, null], [9, 16, 64, null], [9, 17, 65, null], [9, 18, 66, null], [9, 19, 64, null], [9, 20, 65, null], [9, 21, 66, null], [9, 22, 64, null], [9, 23, 65, null], [9, 24, 67, null], [9, 25, 64, null], [9, 26, 65, null], [9, 27, 67, null], [9, 28, 64, null], [9, 29, 65, null], [9, 30, 67, null], [9, 31, 64, null], [9, 32, 65, null], [9, 33, 67, null], [9, 34, 64, null], [9, 35, 65, null], [9, 36, 67, null], [9, 37, 64, null], [9, 38, 65, null], [9, 39, 67, null], [9, 40, 64, null], [9, 41, 65, null], [9, 42, 67, null], [9, 43, 64, null], [9, 44, 65, null], [9, 45, 68, null], [9, 46, 64, null], [9, 47, 64, null], [9, 48, 64, null], [9, 49, 64, null], [9, 50, 64, null], [9, 51, 64, null], [9, 52, 64, null], [9, 53, 64, null], [9, 54, 64, null], [9, 55, 64, null], [9, 56, 64, null], [9, 57, 69, null], [10, 1, 58, null], [10, 2, 59, null], [10, 3, 60, null], [10, 4, 61, null], [10, 5, 59, null], [10, 6, 59, null], [10, 7, 59, null], [10, 8, 59, null], [10, 9, 59, null], [10, 10, 59, null], [10, 11, 59, null], [10, 12, 59, null], [10, 13, 59, null], [10, 14, 60, null], [10, 15, 61, null], [10, 16, 59, null], [10, 17, 60, null], [10, 18, 61, null], [10, 19, 59, null], [10, 20, 60, null], [10, 21, 61, null], [10, 22, 59, null], [10, 23, 60, null], [10, 24, 61, null], [10, 25, 59, null], [10, 26, 60, null], [10, 27, 61, null], [10, 28, 59, null], [10, 29, 60, null], [10, 30, 61, null], [10, 31, 59, null], [10, 32, 60, null], [10, 33, 61, null], [10, 34, 59, null], [10, 35, 60, null], [10, 36, 61, null], [10, 37, 59, null], [10, 38, 60, null], [10, 39, 61, null], [10, 40, 59, null], [10, 41, 60, null], [10, 42, 61, null], [10, 43, 59, null], [10, 44, 60, null], [10, 45, 61, null], [10, 46, 59, null], [10, 47, 59, null], [10, 48, 59, null], [10, 49, 59, null], [10, 50, 59, null], [10, 51, 59, null], [10, 52, 59, null], [10, 53, 59, null], [10, 54, 59, null], [10, 55, 59, null], [10, 56, 59, null], [10, 57, 62, null], [11, 1, 63, null], [11, 2, 64, null], [11, 3, 65, null], [11, 4, 66, null], [11, 5, 64, null], [11, 6, 64, null], [11, 7, 64, null], [11, 8, 64, null], [11, 9, 64, null], [11, 10, 64, null], [11, 11, 64, null], [11, 12, 64, null], [11, 13, 64, null], [11, 14, 65, null], [11, 15, 66, null], [11, 16, 64, null], [11, 17, 65, null], [11, 18, 66, null], [11, 19, 64, null], [11, 20, 65, null], [11, 21, 66, null], [11, 22, 64, null], [11, 23, 65, null], [11, 24, 67, null], [11, 25, 64, null], [11, 26, 65, null], [11, 27, 67, null], [11, 28, 64, null], [11, 29, 65, null], [11, 30, 67, null], [11, 31, 64, null], [11, 32, 65, null], [11, 33, 67, null], [11, 34, 64, null], [11, 35, 65, null], [11, 36, 67, null], [11, 37, 64, null], [11, 38, 65, null], [11, 39, 67, null], [11, 40, 64, null], [11, 41, 65, null], [11, 42, 67, null], [11, 43, 64, null], [11, 44, 65, null], [11, 45, 68, null], [11, 46, 64, null], [11, 47, 64, null], [11, 48, 64, null], [11, 49, 64, null], [11, 50, 64, null], [11, 51, 64, null], [11, 52, 64, null], [11, 53, 64, null], [11, 54, 64, null], [11, 55, 64, null], [11, 56, 64, null], [11, 57, 69, null], [12, 1, 58, null], [12, 2, 59, null], [12, 3, 60, null], [12, 4, 61, null], [12, 5, 59, null], [12, 6, 59, null], [12, 7, 59, null], [12, 8, 59, null], [12, 9, 59, null], [12, 10, 59, null], [12, 11, 59, null], [12, 12, 59, null], [12, 13, 59, null], [12, 14, 60, null], [12, 15, 61, null], [12, 16, 59, null], [12, 17, 60, null], [12, 18, 61, null], [12, 19, 59, null], [12, 20, 60, null], [12, 21, 61, null], [12, 22, 59, null], [12, 23, 60, null], [12, 24, 61, null], [12, 25, 59, null], [12, 26, 60, null], [12, 27, 61, null], [12, 28, 59, null], [12, 29, 60, null], [12, 30, 61, null], [12, 31, 59, null], [12, 32, 60, null], [12, 33, 61, null], [12, 34, 59, null], [12, 35, 60, null], [12, 36, 61, null], [12, 37, 59, null], [12, 38, 60, null], [12, 39, 61, null], [12, 40, 59, null], [12, 41, 60, null], [12, 42, 61, null], [12, 43, 59, null], [12, 44, 60, null], [12, 45, 61, null], [12, 46, 59, null], [12, 47, 59, null], [12, 48, 59, null], [12, 49, 59, null], [12, 50, 59, null], [12, 51, 59, null], [12, 52, 59, null], [12, 53, 59, null], [12, 54, 59, null], [12, 55, 59, null], [12, 56, 59, null], [12, 57, 62, null], [13, 1, 63, null], [13, 2, 64, null], [13, 3, 65, null], [13, 4, 66, null], [13, 5, 64, null], [13, 6, 64, null], [13, 7, 64, null], [13, 8, 64, null], [13, 9, 64, null], [13, 10, 64, null], [13, 11, 64, null], [13, 12, 64, null], [13, 13, 64, null], [13, 14, 65, null], [13, 15, 66, null], [13, 16, 64, null], [13, 17, 65, null], [13, 18, 66, null], [13, 19, 64, null], [13, 20, 65, null], [13, 21, 66, null], [13, 22, 64, null], [13, 23, 65, null], [13, 24, 67, null], [13, 25, 64, null], [13, 26, 65, null], [13, 27, 67, null], [13, 28, 64, null], [13, 29, 65, null], [13, 30, 67, null], [13, 31, 64, null], [13, 32, 65, null], [13, 33, 67, null], [13, 34, 64, null], [13, 35, 65, null], [13, 36, 67, null], [13, 37, 64, null], [13, 38, 65, null], [13, 39, 67, null], [13, 40, 64, null], [13, 41, 65, null], [13, 42, 67, null], [13, 43, 64, null], [13, 44, 65, null], [13, 45, 68, null], [13, 46, 64, null], [13, 47, 64, null], [13, 48, 64, null], [13, 49, 64, null], [13, 50, 64, null], [13, 51, 64, null], [13, 52, 64, null], [13, 53, 64, null], [13, 54, 64, null], [13, 55, 64, null], [13, 56, 64, null], [13, 57, 69, null], [14, 1, 58, null], [14, 2, 59, null], [14, 3, 60, null], [14, 4, 61, null], [14, 5, 59, null], [14, 6, 59, null], [14, 7, 59, null], [14, 8, 59, null], [14, 9, 59, null], [14, 10, 59, null], [14, 11, 59, null], [14, 12, 59, null], [14, 13, 59, null], [14, 14, 60, null], [14, 15, 61, null], [14, 16, 59, null], [14, 17, 60, null], [14, 18, 61, null], [14, 19, 59, null], [14, 20, 60, null], [14, 21, 61, null], [14, 22, 59, null], [14, 23, 60, null], [14, 24, 61, null], [14, 25, 59, null], [14, 26, 60, null], [14, 27, 61, null], [14, 28, 59, null], [14, 29, 60, null], [14, 30, 61, null], [14, 31, 59, null], [14, 32, 60, null], [14, 33, 61, null], [14, 34, 59, null], [14, 35, 60, null], [14, 36, 61, null], [14, 37, 59, null], [14, 38, 60, null], [14, 39, 61, null], [14, 40, 59, null], [14, 41, 60, null], [14, 42, 61, null], [14, 43, 59, null], [14, 44, 60, null], [14, 45, 61, null], [14, 46, 59, null], [14, 47, 59, null], [14, 48, 59, null], [14, 49, 59, null], [14, 50, 59, null], [14, 51, 59, null], [14, 52, 59, null], [14, 53, 59, null], [14, 54, 59, null], [14, 55, 59, null], [14, 56, 59, null], [14, 57, 62, null], [15, 1, 63, null], [15, 2, 64, null], [15, 3, 65, null], [15, 4, 66, null], [15, 5, 64, null], [15, 6, 64, null], [15, 7, 64, null], [15, 8, 64, null], [15, 9, 64, null], [15, 10, 64, null], [15, 11, 64, null], [15, 12, 64, null], [15, 13, 64, null], [15, 14, 65, null], [15, 15, 66, null], [15, 16, 64, null], [15, 17, 65, null], [15, 18, 66, null], [15, 19, 64, null], [15, 20, 65, null], [15, 21, 66, null], [15, 22, 64, null], [15, 23, 65, null], [15, 24, 67, null], [15, 25, 64, null], [15, 26, 65, null], [15, 27, 67, null], [15, 28, 64, null], [15, 29, 65, null], [15, 30, 67, null], [15, 31, 64, null], [15, 32, 65, null], [15, 33, 67, null], [15, 34, 64, null], [15, 35, 65, null], [15, 36, 67, null], [15, 37, 64, null], [15, 38, 65, null], [15, 39, 67, null], [15, 40, 64, null], [15, 41, 65, null], [15, 42, 67, null], [15, 43, 64, null], [15, 44, 65, null], [15, 45, 68, null], [15, 46, 64, null], [15, 47, 64, null], [15, 48, 64, null], [15, 49, 64, null], [15, 50, 64, null], [15, 51, 64, null], [15, 52, 64, null], [15, 53, 64, null], [15, 54, 64, null], [15, 55, 64, null], [15, 56, 64, null], [15, 57, 69, null], [16, 1, 58, null], [16, 2, 59, null], [16, 3, 60, null], [16, 4, 61, null], [16, 5, 59, null], [16, 6, 59, null], [16, 7, 59, null], [16, 8, 59, null], [16, 9, 59, null], [16, 10, 59, null], [16, 11, 59, null], [16, 12, 59, null], [16, 13, 59, null], [16, 14, 60, null], [16, 15, 61, null], [16, 16, 59, null], [16, 17, 60, null], [16, 18, 61, null], [16, 19, 59, null], [16, 20, 60, null], [16, 21, 61, null], [16, 22, 59, null], [16, 23, 60, null], [16, 24, 61, null], [16, 25, 59, null], [16, 26, 60, null], [16, 27, 61, null], [16, 28, 59, null], [16, 29, 60, null], [16, 30, 61, null], [16, 31, 59, null], [16, 32, 60, null], [16, 33, 61, null], [16, 34, 59, null], [16, 35, 60, null], [16, 36, 61, null], [16, 37, 59, null], [16, 38, 60, null], [16, 39, 61, null], [16, 40, 59, null], [16, 41, 60, null], [16, 42, 61, null], [16, 43, 59, null], [16, 44, 60, null], [16, 45, 61, null], [16, 46, 59, null], [16, 47, 59, null], [16, 48, 59, null], [16, 49, 59, null], [16, 50, 59, null], [16, 51, 59, null], [16, 52, 59, null], [16, 53, 59, null], [16, 54, 59, null], [16, 55, 59, null], [16, 56, 59, null], [16, 57, 62, null], [17, 1, 63, null], [17, 2, 64, null], [17, 3, 65, null], [17, 4, 66, null], [17, 5, 64, null], [17, 6, 64, null], [17, 7, 64, null], [17, 8, 64, null], [17, 9, 64, null], [17, 10, 64, null], [17, 11, 64, null], [17, 12, 64, null], [17, 13, 64, null], [17, 14, 65, null], [17, 15, 66, null], [17, 16, 64, null], [17, 17, 65, null], [17, 18, 66, null], [17, 19, 64, null], [17, 20, 65, null], [17, 21, 66, null], [17, 22, 64, null], [17, 23, 65, null], [17, 24, 67, null], [17, 25, 64, null], [17, 26, 65, null], [17, 27, 67, null], [17, 28, 64, null], [17, 29, 65, null], [17, 30, 67, null], [17, 31, 64, null], [17, 32, 65, null], [17, 33, 67, null], [17, 34, 64, null], [17, 35, 65, null], [17, 36, 67, null], [17, 37, 64, null], [17, 38, 65, null], [17, 39, 67, null], [17, 40, 64, null], [17, 41, 65, null], [17, 42, 67, null], [17, 43, 64, null], [17, 44, 65, null], [17, 45, 68, null], [17, 46, 64, null], [17, 47, 64, null], [17, 48, 64, null], [17, 49, 64, null], [17, 50, 64, null], [17, 51, 64, null], [17, 52, 64, null], [17, 53, 64, null], [17, 54, 64, null], [17, 55, 64, null], [17, 56, 64, null], [17, 57, 69, null], [18, 1, 58, null], [18, 2, 59, null], [18, 3, 60, null], [18, 4, 61, null], [18, 5, 59, null], [18, 6, 59, null], [18, 7, 59, null], [18, 8, 59, null], [18, 9, 59, null], [18, 10, 59, null], [18, 11, 59, null], [18, 12, 59, null], [18, 13, 59, null], [18, 14, 60, null], [18, 15, 61, null], [18, 16, 59, null], [18, 17, 60, null], [18, 18, 61, null], [18, 19, 59, null], [18, 20, 60, null], [18, 21, 61, null], [18, 22, 59, null], [18, 23, 60, null], [18, 24, 61, null], [18, 25, 59, null], [18, 26, 60, null], [18, 27, 61, null], [18, 28, 59, null], [18, 29, 60, null], [18, 30, 61, null], [18, 31, 59, null], [18, 32, 60, null], [18, 33, 61, null], [18, 34, 59, null], [18, 35, 60, null], [18, 36, 61, null], [18, 37, 59, null], [18, 38, 60, null], [18, 39, 61, null], [18, 40, 59, null], [18, 41, 60, null], [18, 42, 61, null], [18, 43, 59, null], [18, 44, 60, null], [18, 45, 61, null], [18, 46, 59, null], [18, 47, 59, null], [18, 48, 59, null], [18, 49, 59, null], [18, 50, 59, null], [18, 51, 59, null], [18, 52, 59, null], [18, 53, 59, null], [18, 54, 59, null], [18, 55, 59, null], [18, 56, 59, null], [18, 57, 62, null], [19, 1, 70, null], [19, 2, 64, null], [19, 3, 65, null], [19, 4, 71, null], [19, 5, 64, null], [19, 6, 64, null], [19, 7, 64, null], [19, 8, 64, null], [19, 9, 64, null], [19, 10, 64, null], [19, 11, 64, null], [19, 12, 64, null], [19, 13, 64, null], [19, 14, 65, null], [19, 15, 71, null], [19, 16, 64, null], [19, 17, 65, null], [19, 18, 71, null], [19, 19, 64, null], [19, 20, 65, null], [19, 21, 71, null], [19, 22, 64, null], [19, 23, 65, null], [19, 24, 49, null], [19, 25, 64, null], [19, 26, 65, null], [19, 27, 49, null], [19, 28, 64, null], [19, 29, 65, null], [19, 30, 49, null], [19, 31, 64, null], [19, 32, 65, null], [19, 33, 49, null], [19, 34, 64, null], [19, 35, 65, null], [19, 36, 49, null], [19, 37, 64, null], [19, 38, 65, null], [19, 39, 49, null], [19, 40, 64, null], [19, 41, 65, null], [19, 42, 49, null], [19, 43, 64, null], [19, 44, 65, null], [19, 45, 68, null], [19, 46, 64, null], [19, 47, 64, null], [19, 48, 64, null], [19, 49, 64, null], [19, 50, 64, null], [19, 51, 64, null], [19, 52, 64, null], [19, 53, 64, null], [19, 54, 64, null], [19, 55, 64, null], [19, 56, 64, null], [19, 57, 69, null], [20, 1, 45, null], [20, 2, 43, null], [20, 3, 46, null], [20, 4, 52, null], [20, 5, 43, null], [20, 6, 43, null], [20, 7, 43, null], [20, 8, 43, null], [20, 9, 43, null], [20, 10, 43, null], [20, 11, 43, null], [20, 12, 43, null], [20, 13, 43, null], [20, 14, 46, null], [20, 15, 52, null], [20, 16, 43, null], [20, 17, 46, null], [20, 18, 52, null], [20, 19, 43, null], [20, 20, 46, null], [20, 21, 52, null], [20, 22, 43, null], [20, 23, 46, null], [20, 24, 52, null], [20, 25, 43, null], [20, 26, 46, null], [20, 27, 52, null], [20, 28, 43, null], [20, 29, 46, null], [20, 30, 52, null], [20, 31, 43, null], [20, 32, 46, null], [20, 33, 52, null], [20, 34, 43, null], [20, 35, 46, null], [20, 36, 52, null], [20, 37, 43, null], [20, 38, 46, null], [20, 39, 52, null], [20, 40, 43, null], [20, 41, 46, null], [20, 42, 52, null], [20, 43, 43, null], [20, 44, 46, null], [20, 45, 61, null], [20, 46, 59, null], [20, 47, 59, null], [20, 48, 59, null], [20, 49, 59, null], [20, 50, 59, null], [20, 51, 59, null], [20, 52, 59, null], [20, 53, 59, null], [20, 54, 59, null], [20, 55, 59, null], [20, 56, 59, null], [20, 57, 62, null], [21, 1, 72, "判　　　定　　　基　　　準"], [21, 2, 8, null], [21, 3, 8, null], [21, 4, 8, null], [21, 5, 8, null], [21, 6, 8, null], [21, 7, 8, null], [21, 8, 8, null], [21, 9, 8, null], [21, 10, 8, null], [21, 11, 8, null], [21, 12, 8, null], [21, 13, 8, null], [21, 14, 8, null], [21, 15, 8, null], [21, 16, 8, null], [21, 17, 8, null], [21, 18, 8, null], [21, 19, 8, null], [21, 20, 8, null], [21, 21, 8, null], [21, 22, 8, null], [21, 23, 8, null], [21, 24, 8, null], [21, 25, 8, null], [21, 26, 8, null], [21, 27, 8, null], [21, 28, 11, null], [21, 29, 73, "記　　　入　　　要　　　領"], [21, 30, 8, null], [21, 31, 8, null], [21, 32, 8, null], [21, 33, 8, null], [21, 34, 8, null], [21, 35, 8, null], [21, 36, 8, null], [21, 37, 8, null], [21, 38, 8, null], [21, 39, 8, null], [21, 40, 8, null], [21, 41, 8, null], [21, 42, 8, null], [21, 43, 8, null], [21, 44, 8, null], [21, 45, 8, null], [21, 46, 8, null], [21, 47, 8, null], [21, 48, 8, null], [21, 49, 8, null], [21, 50, 8, null], [21, 51, 8, null], [21, 52, 8, null], [21, 53, 8, null], [21, 54, 8, null], [21, 55, 8, null], [21, 56, 8, null], [21, 57, 11, null], [22, 1, 74, "（１）絶縁抵抗値:使用電圧が300V以下で対地電圧150V以下の場合\n　　　　:使用電圧が300V以下で対地電圧150Vを超え300V以下の場合\n　　　　:使用電圧が300Vを超える場合\n　　　但し、新設時開閉器等で区切ることのできる電路ごとに５ＭΩ以上、\n　　機器が接続された状態では１ＭΩ以上とする。(標仕：施工の試験より)  "], [22, 2, 64, null], [22, 3, 64, null], [22, 4, 64, null], [22, 5, 64, null], [22, 6, 64, null], [22, 7, 64, null], [22, 8, 64, null], [22, 9, 64, null], [22, 10, 64, null], [22, 11, 64, null], [22, 12, 64, null], [22, 13, 64, null], [22, 14, 64, null], [22, 15, 64, null], [22, 16, 64, null], [22, 17, 64, null], [22, 18, 64, null], [22, 19, 64, null], [22, 20, 64, null], [22, 21, 64, null], [22, 22, 64, null], [22, 23, 64, null], [22, 24, 75, "0.1ＭΩ以上\n0.2ＭΩ以上\n0.4ＭΩ以上\n\n　　　"], [22, 25, 64, null], [22, 26, 64, null], [22, 27, 64, null], [22, 28, 69, null], [22, 29, 76, null], [22, 30, 76, "（１）各盤扉裏面に「締付確認票」を貼ること。"], [22, 31, 77, null], [22, 32, 77, null], [22, 33, 77, null], [22, 34, 77, null], [22, 35, 77, null], [22, 36, 77, null], [22, 37, 77, null], [22, 38, 77, null], [22, 39, 77, null], [22, 40, 77, null], [22, 41, 77, null], [22, 42, 77, null], [22, 43, 77, null], [22, 44, 77, null], [22, 45, 77, null], [22, 46, 77, null], [22, 47, 77, null], [22, 48, 77, null], [22, 49, 77, null], [22, 50, 77, null], [22, 51, 77, null], [22, 52, 77, null], [22, 53, 77, null], [22, 54, 77, null], [22, 55, 77, null], [22, 56, 77, null], [22, 57, 78, null], [23, 1, 12, null], [23, 2, 13, null], [23, 3, 13, null], [23, 4, 13, null], [23, 5, 13, null], [23, 6, 13, null], [23, 7, 13, null], [23, 8, 13, null], [23, 9, 13, null], [23, 10, 13, null], [23, 11, 13, null], [23, 12, 13, null], [23, 13, 13, null], [23, 14, 13, null], [23, 15, 13, null], [23, 16, 13, null], [23, 17, 13, null], [23, 18, 13, null], [23, 19, 13, null], [23, 20, 13, null], [23, 21, 13, null], [23, 22, 13, null], [23, 23, 13, null], [23, 24, 13, null], [23, 25, 13, null], [23, 26, 13, null], [23, 27, 13, null], [23, 28, 79, null], [23, 29, 76, null], [23, 30, 80, "（２）計画した接続箇所にサーモラベルを貼ること。"], [23, 31, 77, null], [23, 32, 77, null], [23, 33, 77, null], [23, 34, 77, null], [23, 35, 77, null], [23, 36, 77, null], [23, 37, 77, null], [23, 38, 77, null], [23, 39, 77, null], [23, 40, 77, null], [23, 41, 77, null], [23, 42, 77, null], [23, 43, 77, null], [23, 44, 77, null], [23, 45, 77, null], [23, 46, 77, null], [23, 47, 77, null], [23, 48, 77, null], [23, 49, 77, null], [23, 50, 77, null], [23, 51, 77, null], [23, 52, 77, null], [23, 53, 77, null], [23, 54, 77, null], [23, 55, 77, null], [23, 56, 77, null], [23, 57, 78, null], [24, 1, 12, null], [24, 2, 13, null], [24, 3, 13, null], [24, 4, 13, null], [24, 5, 13, null], [24, 6, 13, null], [24, 7, 13, null], [24, 8, 13, null], [24, 9, 13, null], [24, 10, 13, null], [24, 11, 13, null], [24, 12, 13, null], [24, 13, 13, null], [24, 14, 13, null], [24, 15, 13, null], [24, 16, 13, null], [24, 17, 13, null], [24, 18, 13, null], [24, 19, 13, null], [24, 20, 13, null], [24, 21, 13, null], [24, 22, 13, null], [24, 23, 13, null], [24, 24, 13, null], [24, 25, 13, null], [24, 26, 13, null], [24, 27, 13, null], [24, 28, 79, null], [24, 29, 76, null], [24, 30, 76, "（３）判定結果には、良：○、否：×、対象外：－　を記入すること。"], [24, 31, 77, null], [24, 32, 77, null], [24, 33, 77, null], [24, 34, 77, null], [24, 35, 77, null], [24, 36, 77, null], [24, 37, 77, null], [24, 38, 77, null], [24, 39, 77, null], [24, 40, 77, null], [24, 41, 77, null], [24, 42, 77, null], [24, 43, 77, null], [24, 44, 77, null], [24, 45, 77, null], [24, 46, 77, null], [24, 47, 77, null], [24, 48, 77, null], [24, 49, 77, null], [24, 50, 77, null], [24, 51, 77, null], [24, 52, 77, null], [24, 53, 77, null], [24, 54, 77, null], [24, 55, 77, null], [24, 56, 77, null], [24, 57, 78, null], [25, 1, 12, null], [25, 2, 13, null], [25, 3, 13, null], [25, 4, 13, null], [25, 5, 13, null], [25, 6, 13, null], [25, 7, 13, null], [25, 8, 13, null], [25, 9, 13, null], [25, 10, 13, null], [25, 11, 13, null], [25, 12, 13, null], [25, 13, 13, null], [25, 14, 13, null], [25, 15, 13, null], [25, 16, 13, null], [25, 17, 13, null], [25, 18, 13, null], [25, 19, 13, null], [25, 20, 13, null], [25, 21, 13, null], [25, 22, 13, null], [25, 23, 13, null], [25, 24, 13, null], [25, 25, 13, null], [25, 26, 13, null], [25, 27, 13, null], [25, 28, 79, null], [25, 29, 76, null], [25, 30, 76, null], [25, 31, 77, null], [25, 32, 77, null], [25, 33, 77, null], [25, 34, 77, null], [25, 35, 77, null], [25, 36, 77, null], [25, 37, 77, null], [25, 38, 77, null], [25, 39, 77, null], [25, 40, 77, null], [25, 41, 77, null], [25, 42, 77, null], [25, 43, 77, null], [25, 44, 77, null], [25, 45, 77, null], [25, 46, 77, null], [25, 47, 77, null], [25, 48, 77, null], [25, 49, 77, null], [25, 50, 77, null], [25, 51, 77, null], [25, 52, 77, null], [25, 53, 77, null], [25, 54, 77, null], [25, 55, 77, null], [25, 56, 77, null], [25, 57, 78, null], [26, 1, 81, "（２）締　　　付：規定トルクで締め付けてマーキング(適合品)されていること。"], [26, 2, 82, null], [26, 3, 82, null], [26, 4, 82, null], [26, 5, 82, null], [26, 6, 82, null], [26, 7, 82, null], [26, 8, 82, null], [26, 9, 82, null], [26, 10, 82, null], [26, 11, 82, null], [26, 12, 82, null], [26, 13, 82, null], [26, 14, 82, null], [26, 15, 82, null], [26, 16, 82, null], [26, 17, 82, null], [26, 18, 82, null], [26, 19, 82, null], [26, 20, 82, null], [26, 21, 82, null], [26, 22, 82, null], [26, 23, 82, null], [26, 24, 82, null], [26, 25, 82, null], [26, 26, 82, null], [26, 27, 82, null], [26, 28, 83, null], [26, 29, 76, null], [26, 30, 76, null], [26, 31, 76, null], [26, 32, 76, null], [26, 33, 76, null], [26, 34, 76, null], [26, 35, 76, null], [26, 36, 76, null], [26, 37, 76, null], [26, 38, 76, null], [26, 39, 76, null], [26, 40, 76, null], [26, 41, 76, null], [26, 42, 76, null], [26, 43, 76, null], [26, 44, 76, null], [26, 45, 76, null], [26, 46, 76, null], [26, 47, 76, null], [26, 48, 76, null], [26, 49, 76, null], [26, 50, 76, null], [26, 51, 76, null], [26, 52, 76, null], [26, 53, 76, null], [26, 54, 76, null], [26, 55, 76, null], [26, 56, 76, null], [26, 57, 84, null], [27, 1, 85, "使用計器"], [27, 2, 86, "品　　　　　名"], [27, 3, 8, null], [27, 4, 8, null], [27, 5, 8, null], [27, 6, 8, null], [27, 7, 8, null], [27, 8, 8, null], [27, 9, 8, null], [27, 10, 8, null], [27, 11, 9, null], [27, 12, 7, "計　　器　　目　　盛"], [27, 13, 8, null], [27, 14, 8, null], [27, 15, 8, null], [27, 16, 8, null], [27, 17, 8, null], [27, 18, 8, null], [27, 19, 8, null], [27, 20, 8, null], [27, 21, 8, null], [27, 22, 8, null], [27, 23, 8, null], [27, 24, 9, null], [27, 25, 7, "形　　式"], [27, 26, 8, null], [27, 27, 8, null], [27, 28, 8, null], [27, 29, 8, null], [27, 30, 8, null], [27, 31, 9, null], [27, 32, 7, "製　作　所"], [27, 33, 8, null], [27, 34, 8, null], [27, 35, 8, null], [27, 36, 8, null], [27, 37, 8, null], [27, 38, 9, null], [27, 39, 7, "製 造 番 号"], [27, 40, 8, null], [27, 41, 8, null], [27, 42, 8, null], [27, 43, 8, null], [27, 44, 8, null], [27, 45, 9, null], [27, 46, 7, "製　造　年"], [27, 47, 8, null], [27, 48, 8, null], [27, 49, 8, null], [27, 50, 8, null], [27, 51, 9, null], [27, 52, 87, "校正有効期限"], [27, 53, 8, null], [27, 54, 8, null], [27, 55, 8, null], [27, 56, 8, null], [27, 57, 11, null], [28, 1, 88, null], [28, 2, 89, null], [28, 3, 50, null], [28, 4, 50, null], [28, 5, 50, null], [28, 6, 50, null], [28, 7, 50, null], [28, 8, 50, null], [28, 9, 50, null], [28, 10, 50, null], [28, 11, 51, null], [28, 12, 90, null], [28, 13, 50, null], [28, 14, 50, null], [28, 15, 50, null], [28, 16, 50, null], [28, 17, 50, null], [28, 18, 50, null], [28, 19, 50, null], [28, 20, 50, null], [28, 21, 50, null], [28, 22, 50, null], [28, 23, 50, null], [28, 24, 51, null], [28, 25, 90, null], [28, 26, 50, null], [28, 27, 50, null], [28, 28, 50, null], [28, 29, 50, null], [28, 30, 50, null], [28, 31, 51, null], [28, 32, 90, null], [28, 33, 50, null], [28, 34, 50, null], [28, 35, 50, null], [28, 36, 50, null], [28, 37, 50, null], [28, 38, 51, null], [28, 39, 90, null], [28, 40, 50, null], [28, 41, 50, null], [28, 42, 50, null], [28, 43, 50, null], [28, 44, 50, null], [28, 45, 51, null], [28, 46, 90, null], [28, 47, 50, null], [28, 48, 50, null], [28, 49, 50, null], [28, 50, 50, null], [28, 51, 51, null], [28, 52, 91, null], [28, 53, 50, null], [28, 54, 50, null], [28, 55, 50, null], [28, 56, 50, null], [28, 57, 92, null], [29, 1, 93, null], [29, 2, 93, null], [29, 3, 93, null], [29, 4, 93, null], [29, 5, 93, null], [29, 6, 93, null], [29, 7, 93, null], [29, 8, 93, null], [29, 9, 93, null], [29, 10, 93, null], [29, 11, 93, null], [29, 12, 93, null], [29, 13, 93, null], [29, 14, 93, null], [29, 15, 93, null], [29, 16, 93, null], [29, 17, 93, null], [29, 18, 93, null], [29, 19, 93, null], [29, 20, 93, null], [29, 21, 93, null], [29, 22, 93, null], [29, 23, 93, null], [29, 24, 93, null], [29, 25, 93, null], [29, 26, 93, null], [29, 27, 93, null], [29, 28, 93, null], [29, 29, 93, null], [29, 30, 93, null], [29, 31, 93, null], [29, 32, 93, null], [29, 33, 93, null], [29, 34, 93, null], [29, 35, 93, null], [29, 36, 93, null], [29, 37, 93, null], [29, 38, 93, null], [29, 39, 93, null], [29, 40, 93, null], [29, 41, 93, null], [29, 42, 93, null], [29, 43, 93, null], [29, 44, 93, null], [29, 45, 93, null], [29, 46, 93, null], [29, 47, 93, null], [29, 48, 93, null], [29, 49, 93, null], [29, 50, 93, null], [29, 51, 93, null], [29, 52, 93, null], [29, 53, 93, null], [29, 54, 93, null], [29, 55, 93, null], [29, 56, 93, null], [29, 57, 93, null], [30, 1, 93, null], [30, 2, 93, null], [30, 3, 93, null], [30, 4, 93, null], [30, 5, 93, null], [30, 6, 93, null], [30, 7, 93, null], [30, 8, 93, null], [30, 9, 93, null], [30, 10, 93, null], [30, 11, 93, null], [30, 12, 93, null], [30, 13, 93, null], [30, 14, 93, null], [30, 15, 93, null], [30, 16, 93, null], [30, 17, 93, null], [30, 18, 93, null], [30, 19, 93, null], [30, 20, 93, null], [30, 21, 93, null], [30, 22, 93, null], [30, 23, 93, null], [30, 24, 93, null], [30, 25, 93, null], [30, 26, 93, null], [30, 27, 93, null], [30, 28, 93, null], [30, 29, 93, null], [30, 30, 93, null], [30, 31, 93, null], [30, 32, 93, null], [30, 33, 93, null], [30, 34, 93, null], [30, 35, 93, null], [30, 36, 93, null], [30, 37, 93, null], [30, 38, 93, null], [30, 39, 93, null], [30, 40, 93, null], [30, 41, 93, null], [30, 42, 93, null], [30, 43, 93, null], [30, 44, 93, null], [30, 45, 93, null], [30, 46, 93, null], [30, 47, 93, null], [30, 48, 93, null], [30, 49, 93, null], [30, 50, 93, null], [30, 51, 93, null], [30, 52, 93, null], [30, 53, 93, null], [30, 54, 93, null], [30, 55, 93, null], [30, 56, 93, null], [30, 57, 93, null]], "margins": {"left": 0.1968503937007874, "right": 0.1968503937007874, "top": 0.4330708661417323, "bottom": 0.3937007874015748}, "default_colw": 2.5703125, "default_rowh": 18.0, "gridlines": null};
+
+/* ===================== helpers ===================== */
+const $ = id => document.getElementById(id);
+const nk = s => (s || '').normalize('NFKC').replace(/[ 　]/g, '').replace(/Φ/g, 'φ');
+const PANELS = ['１ＬＰ－１','１ＬＰ－２','１ＬＰ－３','１ＬＰ－４','２ＬＰ－１','２ＬＰ－２','２ＬＰ－３','２ＬＰ－４','３ＬＰ－１','３ＬＰ－２','３ＬＰ－３','３ＬＰ－４','１ＬＰ－ＰＷ','ＲＬＰ－１','ＲＰ－２','ＲＰ－３','ＲＰ－４','厨房－Ｐ','Ｓ－１','Ｓ－２','Ｓ－４','Ｓ－５','ＯＡ－１','ＯＡ－２','ＯＡ－３','厨房－Ｌ','メーター盤','１Ｌ－ＡＴＭ'].map(nk);
+const PANEL_ORDER = ['1LP-1','1LP-2','1LP-3','1LP-4','2LP-1','2LP-2','2LP-3','2LP-4','3LP-1','3LP-2','3LP-3','3LP-4','1LP-PW','RLP-1','RP-2','RP-3','RP-4','厨房-P','OA-1','OA-2','OA-3','厨房-L','メーター盤','1L-ATM'];
+const BRK_RE = /\dP\d+\/\d+A/;
+const DBG_PAGES = new Set((new URLSearchParams(location.search).get('dbgpages') || '').split(',').filter(Boolean).map(Number));
+const PANEL_RE = /^(?:\d?[A-Z]{1,3}-(?:\d+|[A-Z]{1,3})|厨房-[PL]|メーター盤|接地端子盤)$/;   // generic fallback for other drawings
+
+if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+/* ===================== 1. page geometry: chars / fragments / rects ===================== */
+async function pageGeometry(page) {
+  const vp = page.getViewport({ scale: 1 });
+  const tc = await page.getTextContent({ disableCombineTextItems: true });
+  const chars = [], vchars = [];
+  for (const it of tc.items) {
+    if (!it.str || /^ +$/.test(it.str)) continue;   // pdf.js inserts synthetic ASCII spaces for glyph gaps
+    const m = pdfjsLib.Util.transform(vp.transform, it.transform);
+    const fs = Math.hypot(m[2], m[3]) || Math.hypot(m[0], m[1]) || it.height || 5;
+    const n = [...it.str].length; const w = it.width / n;
+    const cs = [...it.str];
+    const al = Math.hypot(m[0], m[1]) || 1; const ux = m[0] / al, uy = m[1] / al;   // text advance direction (viewport space)
+    const vertical = Math.abs(uy) > Math.abs(ux);
+    for (let i = 0; i < n; i++) {
+      if (cs[i] === ' ') continue;                    // synthetic spaces inside an item
+      if (!vertical) {
+        const x0 = m[4] + (ux < 0 ? -(i + 1) * w : i * w);
+        chars.push({ text: cs[i], x0, x1: x0 + w, top: m[5] - fs, bottom: m[5] });
+      } else {
+        const oy = m[5] + i * w * uy, ox = m[4];
+        vchars.push({ text: cs[i], x0: ox - fs / 2, x1: ox + fs / 2, top: Math.min(oy, oy + w * uy), bottom: Math.max(oy, oy + w * uy), dir: uy < 0 ? -1 : 1 });
+      }
+    }
+  }
+  // rects from the operator list
+  const ops = await page.getOperatorList();
+  const O = pdfjsLib.OPS; const rects = [];
+  let ctm = [1, 0, 0, 1, 0, 0]; const stack = [];
+  const T = () => pdfjsLib.Util.transform(vp.transform, ctm);
+  const addRect = (pts) => {
+    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    const x0 = Math.min(...xs), x1 = Math.max(...xs), top = Math.min(...ys), bottom = Math.max(...ys);
+    rects.push({ x0, x1, top, bottom, width: x1 - x0, height: bottom - top });
+  };
+  for (let i = 0; i < ops.fnArray.length; i++) {
+    const fn = ops.fnArray[i], a = ops.argsArray[i];
+    if (fn === O.save) stack.push(ctm);
+    else if (fn === O.restore) ctm = stack.pop() || ctm;
+    else if (fn === O.transform) ctm = pdfjsLib.Util.transform(ctm, a);
+    else if (fn === O.constructPath) {
+      const M = T(); const pops = a[0], args = a[1]; let k = 0; let sub = [];
+      const flush = () => {
+        if (sub.length >= 4) {
+          const p = sub.slice(); if (p.length === 5 && Math.abs(p[0][0] - p[4][0]) < .01 && Math.abs(p[0][1] - p[4][1]) < .01) p.pop();
+          if (p.length === 4) {
+            let ok = true;
+            for (let j = 0; j < 4; j++) { const q = p[j], r = p[(j + 1) % 4]; if (Math.abs(q[0] - r[0]) > .05 && Math.abs(q[1] - r[1]) > .05) ok = false; }
+            if (ok) addRect(p);
+          }
+        }
+        sub = [];
+      };
+      for (const op of pops) {
+        if (op === O.rectangle) {
+          const x = args[k], y = args[k + 1], w = args[k + 2], h = args[k + 3]; k += 4;
+          flush();
+          addRect([[x, y], [x + w, y], [x + w, y + h], [x, y + h]].map(p => pdfjsLib.Util.applyTransform(p, M)));
+        } else if (op === O.moveTo) { flush(); sub.push(pdfjsLib.Util.applyTransform([args[k], args[k + 1]], M)); k += 2; }
+        else if (op === O.lineTo) { sub.push(pdfjsLib.Util.applyTransform([args[k], args[k + 1]], M)); k += 2; }
+        else if (op === O.curveTo) { k += 6; sub = []; }
+        else if (op === O.curveTo2 || op === O.curveTo3) { k += 4; sub = []; }
+        else if (op === O.closePath) { if (sub.length) sub.push(sub[0]); flush(); }
+      }
+      flush();
+    }
+  }
+  return { chars, frags: fragments(chars), vfrags: fragmentsV(vchars), rects, width: vp.width, height: vp.height };
+}
+
+/* vertical (rotated 90°) text: one column of glyphs at the same x; gaps along y split fragments */
+function fragmentsV(vchars, gap = 4, xtol = 1.5) {
+  const cs = vchars.slice().sort((a, b) => (a.x0 - b.x0));
+  const cols = [];
+  for (const c of cs) {
+    if (cols.length && Math.abs(cols[cols.length - 1][0] - c.x0) <= xtol) cols[cols.length - 1][1].push(c);
+    else cols.push([c.x0, [c]]);
+  }
+  const out = [];
+  for (const [, col] of cols) {
+    const dir = col[0].dir;                                   // -1: reads bottom-to-top
+    col.sort((a, b) => dir < 0 ? (b.top - a.top) : (a.top - b.top));
+    let cur = [col[0]];
+    for (const c of col.slice(1)) {
+      const g = dir < 0 ? cur[cur.length - 1].top - c.bottom : c.top - cur[cur.length - 1].bottom;
+      if (g > gap) { out.push(cur); cur = [c]; } else cur.push(c);
+    }
+    out.push(cur);
+  }
+  return out.map(cs => {
+    const f = { text: cs.map(c => c.text).join(''), x0: Math.min(...cs.map(c => c.x0)), x1: Math.max(...cs.map(c => c.x1)), top: Math.min(...cs.map(c => c.top)), bottom: Math.max(...cs.map(c => c.bottom)), vert: true };
+    f.xc = (f.x0 + f.x1) / 2; f.yc = (f.top + f.bottom) / 2; return f;
+  });
+}
+
+function fragments(chars, gap = 5, ytol = 1.5) {
+  const cs = chars.slice().sort((a, b) => (Math.round(a.top) - Math.round(b.top)) || (a.x0 - b.x0));
+  const rows = [];
+  for (const c of cs) {
+    if (rows.length && Math.abs(rows[rows.length - 1][0] - c.top) <= ytol) rows[rows.length - 1][1].push(c);
+    else rows.push([c.top, [c]]);
+  }
+  const out = [];
+  for (const [, r] of rows) {
+    r.sort((a, b) => a.x0 - b.x0);
+    let cur = [r[0]];
+    for (const c of r.slice(1)) { if (c.x0 - cur[cur.length - 1].x1 > gap) { out.push(cur); cur = [c]; } else cur.push(c); }
+    out.push(cur);
+  }
+  return out.map(cs => {
+    const f = { text: cs.map(c => c.text).join(''), x0: cs[0].x0, x1: cs[cs.length - 1].x1, top: Math.min(...cs.map(c => c.top)), bottom: Math.max(...cs.map(c => c.bottom)) };
+    f.xc = (f.x0 + f.x1) / 2; f.yc = (f.top + f.bottom) / 2; return f;
+  });
+}
+
+function cellText(chars, r) {
+  const cs = chars.filter(c => { const xc = (c.x0 + c.x1) / 2, yc = (c.top + c.bottom) / 2; return r.x0 - .5 <= xc && xc <= r.x1 + .5 && r.top - .5 <= yc && yc <= r.bottom + .5; });
+  cs.sort((a, b) => (Math.round(a.top) - Math.round(b.top)) || (a.x0 - b.x0));
+  const lines = []; let cur = [], last = null;
+  for (const c of cs) { if (last !== null && Math.abs(c.top - last) > 3) { lines.push(cur.join('')); cur = []; } cur.push(c.text); last = c.top; }
+  if (cur.length) lines.push(cur.join(''));
+  return lines.map(l => l.trim()).filter(Boolean).join(' / ');
+}
+
+/* ===================== 2. parsers (lighting layout / power table / page meta) ===================== */
+function parseLighting(g) {
+  const { chars, frags, rects } = g; const rows = [];
+  const numcells = rects.filter(r => r.width >= 15 && r.width <= 25 && r.height >= 12 && r.height <= 18);
+  for (const nc of numcells) {
+    let name = null, side = null;
+    for (const r of rects) {
+      if (r === nc || !(r.width >= 50 && r.width <= 70) || Math.abs(r.top - nc.top) > 1) continue;
+      if (Math.abs(r.x1 - nc.x0) < 1.5) { name = r; side = 'L'; }
+      else if (Math.abs(r.x0 - nc.x1) < 1.5) { name = r; side = 'R'; }
+    }
+    if (!name) continue;
+    const num = cellText(chars, nc), nm = cellText(chars, name);
+    if (!num && !nm) continue;
+    const yc = (nc.top + nc.bottom) / 2;
+    const bus = side === 'L' ? frags.filter(f => nc.x1 < f.x0 && f.x0 < nc.x1 + 100 && Math.abs(f.yc - yc) < 9)
+                             : frags.filter(f => nc.x0 - 100 < f.x1 && f.x1 < nc.x0 && Math.abs(f.yc - yc) < 9);
+    const bt = bus.map(f => nk(f.text)).join('');
+    rows.push({ kind: 'L', no: nk(num), name: nk(nm), side, v200: bt.includes('200V'), elb: bt.includes('mA'), space: bt.includes('スペース'), x: nc.x0, y: nc.top });
+  }
+  return rows;
+}
+
+function parsePower(g) {
+  const { chars, frags, rects } = g; const rows = [];
+  const hdr = { name: [], kw: [], rem: [] };
+  for (const r of rects) {
+    const t = nk(cellText(chars, r));
+    if (t.includes('回路番号')) hdr.name.push(r);
+    else if (t.includes('負荷容量')) hdr.kw.push(r);
+    else if (t.startsWith('備考')) hdr.rem.push(r);
+  }
+  const noFrags = frags.filter(f => f.text.includes('内代入文字'));
+  const sameRow = (h, hs) => {
+    const nxt = hs.filter(o => o.x0 > h.x1).map(o => o.x0); const lim = nxt.length ? Math.min(...nxt) : 1e9;
+    return rects.filter(r => Math.abs(r.top - h.top) < 1 && Math.abs(r.bottom - h.bottom) < 1 && h.x1 - 1 < r.x0 && r.x0 < lim - 1);
+  };
+  const findInRow = (hs, x0, x1) => { for (const h of hs) for (const r of sameRow(h, hs)) if (r.x0 < (x0 + x1) / 2 && (x0 + x1) / 2 < r.x1) return cellText(chars, r); return ''; };
+  for (const h of hdr.name) {
+    for (const nc of sameRow(h, hdr.name)) {
+      const name = cellText(chars, nc); const x0 = nc.x0, x1 = nc.x1;
+      if (nk(name).includes('回路番号')) continue;
+      const kw = findInRow(hdr.kw, x0, x1), rem = findInRow(hdr.rem, x0, x1);
+      let no = '';
+      for (const nf of noFrags) if (nf.top > nc.bottom - 1) { const c = frags.filter(f => Math.abs(f.top - nf.top) < 2 && x0 < f.xc && f.xc < x1); if (c.length) { no = c[0].text; break; } }
+      if (!name && !no) continue;
+      const col = frags.filter(f => x0 - 2 < f.x0 && f.x0 < x1 && f.yc < nc.top).sort((a, b) => a.top - b.top);
+      let brk = '', btype = '', cable = '', brkF = null;
+      for (const f of col) if (BRK_RE.test(nk(f.text))) { brk = nk(f.text); brkF = f; }
+      if (brkF) for (const f of col) { const t = nk(f.text); if ((t.includes('MCCB') || t.includes('ELCB') || t.includes('ELB')) && brkF.top - f.top >= 0 && brkF.top - f.top < 12) btype = t.replace(/□/g, ''); }
+      for (const f of col) { const t = nk(f.text); if (t.includes('EM-')) cable = t; }
+      rows.push({ kind: 'P', no: nk(no), name: nk(name), kw: nk(kw), remark: nk(rem), brk, btype, cable, x: x0, y: nc.top, ytab: h.top });
+    }
+  }
+  rows.sort((a, b) => (a.ytab - b.ytab) || (a.x - b.x));
+  return rows;
+}
+
+function pageMeta(g) {
+  const { chars, frags, rects } = g; const m = { supplies: [], main: [] };
+  for (const f of frags) { const t = nk(f.text); if (/\dφ\dW/.test(t)) m.supplies.push({ text: t, x: f.xc, y: f.yc }); }
+  for (const r of rects) {
+    const ct = nk(cellText(chars, r));
+    if (ct.startsWith('主幹')) {
+      const yc = (r.top + r.bottom) / 2;
+      const cand = frags.filter(f => r.x1 < f.x0 && f.x0 < r.x1 + 80 && Math.abs(f.yc - yc) < 14 && BRK_RE.test(nk(f.text)));
+      if (cand.length) m.main.push({ brk: nk(cand[0].text), label: ct, x: r.x0 });
+    }
+  }
+  const cab = frags.filter(f => nk(f.text).includes('EM-CE')).sort((a, b) => a.top - b.top);
+  if (cab.length) m.cable = nk(cab[0].text);
+  for (const f of frags.filter(f => f.x0 > 560 && f.yc > 500)) {
+    const t = f.text.replace(/ /g, ''), tn = nk(t);
+    if ((t.includes('分電盤') || t.endsWith('盤')) && !m.type && !tn.includes('メーター盤')) m.type = t;
+    for (const p of PANELS) if (tn.includes(p)) m.panel = p;
+    if (!m.panel && PANEL_RE.test(tn) && tn !== '単線結線図') m.panelGuess = tn;
+  }
+  for (const f of frags) { const t = f.text.replace(/ /g, ''); if (f.yc > 500 && t.endsWith('工事') && t.length > 4 && !m.project) m.project = t; }
+  if (!m.panel && m.panelGuess) m.panel = m.panelGuess;
+  return m;
+}
+
+/* ===================== 2b. Nitto Kogyo layouts: lighting panel (circle numbers, free text names) / cubicle ===================== */
+const CNUM_RE = /^C\d+[’']?$/;
+const SUP_RE = /\dφ\dW/;
+const rowsBy = (items, key, tol) => {           // cluster items by a coordinate
+  const s = items.slice().sort((a, b) => key(a) - key(b)); const out = [];
+  for (const it of s) { if (out.length && Math.abs(key(out[out.length - 1][0]) - key(it)) <= tol) out[out.length - 1].push(it); else out.push([it]); }
+  return out;
+};
+const near = (frags, f, dx, dy0, dy1) => frags.filter(o => o !== f && Math.abs(o.xc - f.xc) < dx && o.yc - f.yc >= dy0 && o.yc - f.yc <= dy1);
+
+function detectLayout(g) {
+  const texts = g.frags.map(f => nk(f.text));
+  if (g.frags.some(f => f.text.replace(/ /g, '') === '単線結線図')) return 'nichiden';
+  const hvTag = texts.some(t => /^(VCB|LBS\d*|DS|PAS|UGS)$/.test(t));
+  if ((texts.some(t => /受電設備/.test(t)) && texts.some(t => /結線図/.test(t)) && hvTag) || (texts.some(t => /6600V|6\.6kV/.test(t)) && hvTag)) return 'nitto-cubicle';
+  if (texts.some(t => SUP_RE.test(t)) && texts.filter(t => CNUM_RE.test(t)).length >= 4) return 'nitto-lp';
+  return null;
+}
+
+function parseNittoLighting(g) {
+  const { frags, width, height } = g;
+  const meta = { supplies: [], main: [], type: '電灯分電盤' };
+  const T = f => nk(f.text);
+  for (const f of frags) { const t = T(f); if (SUP_RE.test(t) && f.yc < 80) meta.supplies.push({ text: t.replace(/60Hz$/i, '').replace(/^AC/, ''), x: f.xc, y: f.yc }); }
+  // panel name: large text in the title area
+  const cands = frags.filter(f => f.x0 > width * 0.6 && f.yc > height * 0.7 && /^[0-9]?[A-Z]{1,4}-[0-9A-Z]+$/.test(T(f)));
+  if (cands.length) meta.panel = T(cands.sort((a, b) => (b.bottom - b.top) - (a.bottom - a.top))[0]);
+  // main breaker: MCB/MCCB label near the top followed by "3P 225AF/" "225AT"
+  const mb = frags.find(f => /^(MCB|MCCB|ELB|ELCB)/.test(T(f)) && f.yc < height * 0.3);
+  if (mb) {
+    const below = near(frags, mb, 40, -2, 30).map(T).join(' ');
+    const p = below.match(/(\d)P(\d+)AF/), at = below.match(/(\d+)AT/);
+    if (p) meta.main.push({ brk: `${T(mb).match(/^[A-Z]+/)[0]} ${p[1]}P ${p[2]}AF/${at ? at[1] : p[2]}AT`, label: '', x: mb.xc });
+  }
+  const cab = frags.find(f => /^(CVT|CV|CVQ|CET|EM-CE)/.test(T(f)) && f.yc < height * 0.3);
+  if (cab) { let c = T(cab); if (!/\d/.test(c)) { const d = near(frags, cab, 20, 0, 12).find(o => /^\d+/.test(T(o))); if (d) c += T(d).replace(/[^\d.]/g, '') + 'sq'; } meta.cable = c; }
+  // breaker spec table: "C1－C62 PELB 2P 30AF/20AT F 30mA 100V (1E) X 50"  (the line arrives in several fragments)
+  const specs = []; const specFrags = new Set();
+  for (const f of frags) {
+    if (!/(P?ELB|ELCB|MCCB|MCB)\dP/.test(T(f))) continue;
+    const line = frags.filter(o => Math.abs(o.yc - f.yc) < 3.5 && o.x0 >= f.x0 - 60).sort((a, b) => a.x0 - b.x0);
+    const t = line.map(T).join(''); const m = t.match(/^(C\d+[’']?)?(?:[-－](C\d+[’']?)?)?(P?ELB|ELCB|MCCB|MCB)(\d)P(\d+)AF\/(\d+)AT(?:F?(\d+)mA)?(\d+)V/);
+    if (!m) continue;
+    line.forEach(o => specFrags.add(o));
+    if (!(m[1] || m[2])) continue;
+    const num = s => s ? parseInt(s.replace(/\D/g, ''), 10) : null;
+    specs.push({ from: num(m[1]), to: num(m[2] || m[1]), single: !m[2], prime: /[’']/.test(m[1] || ''), type: m[3], poles: +m[4], at: +m[6], ma: m[7] ? +m[7] : null, volt: m[8] });
+  }
+  // free text on one row may arrive split at ideographic spaces: merge neighbours (gap < 14pt) into one name
+  const joinRow = items => {
+    const s = items.slice().sort((a, b) => a.x0 - b.x0); const out = [];
+    for (const it of s) {
+      const last = out[out.length - 1];
+      if (last && it.x0 - last.x1 < 14) { last.text += (it.x0 - last.x1 > 2 ? ' ' : '') + T(it); last.x1 = it.x1; }
+      else out.push({ text: T(it), x0: it.x0, x1: it.x1, xc: it.xc });
+    }
+    return out;
+  };
+  const specFor = (no, v200) => {   // numbers repeat between the 200V block and the 100V block: match the voltage first
+    const n = parseInt(no.replace(/\D/g, ''), 10), prime = /[’']/.test(no);
+    const ss = specs.filter(s => (s.volt === '200') === v200);
+    const pick = list => list.find(s => s.single && s.from === n && s.prime === prime) || list.find(s => !s.single && s.from <= n && n <= s.to) || list.find(s => s.single && s.from === n) || null;
+    return pick(ss) || pick(specs);
+  };
+  // circuit numbers -> rows; a bus group = numbers whose x are close together
+  const nums = frags.filter(f => CNUM_RE.test(T(f)) && !specFrags.has(f));
+  const groups = []; for (const n of nums.slice().sort((a, b) => a.xc - b.xc)) { const gp = groups.find(gg => Math.abs(gg.x - n.xc) < 40); if (gp) { gp.items.push(n); gp.x = (gp.x * (gp.items.length - 1) + n.xc) / gp.items.length; } else groups.push({ x: n.xc, items: [n] }); }
+  const rows = [];
+  const isName = f => { const t = T(f); return t && !CNUM_RE.test(t) && !/^\d+V$/.test(t) && !/^[0-9.]+$/.test(t) && !/(P?ELB|MCCB|MCB)\dP/.test(t); };
+  const gi = groups.map(gp => gp.x).sort((a, b) => a - b);
+  for (const gp of groups) {
+    for (const row of rowsBy(gp.items, f => f.yc, 3)) {
+      row.sort((a, b) => a.xc - b.xc);
+      for (const n of row) {
+        const side = row.length > 1 ? (n === row[0] ? 'L' : 'R') : (n.xc < gp.x ? 'L' : 'R');
+        const same = frags.filter(o => Math.abs(o.yc - n.yc) < 4.5);
+        // name: nearest free text on that side, but not beyond the neighbouring bus group
+        const gL = Math.max(-1e9, ...gi.filter(x => x < gp.x - 40)), gR = Math.min(1e9, ...gi.filter(x => x > gp.x + 40));
+        const cand = side === 'L' ? joinRow(same.filter(o => isName(o) && !specFrags.has(o) && o.x1 < n.x0 - 8 && o.xc > (gL === -1e9 ? -1e9 : (gL + gp.x) / 2))).sort((a, b) => b.x1 - a.x1)
+                                  : joinRow(same.filter(o => isName(o) && !specFrags.has(o) && o.x0 > n.x1 + 8 && o.xc < (gR === 1e9 ? 1e9 : (gR + gp.x) / 2))).sort((a, b) => a.x0 - b.x0);
+        const name = (cand.length ? cand[0].text : '').replace(/^受口(?=[^ ])/, '受口 ');
+        if (!name || name === 'スペース') continue;
+        const v200 = same.some(o => /^200V$/.test(T(o)) && Math.abs(o.xc - n.xc) < 45);
+        const sp = specFor(T(n), v200);
+        const elb = sp ? /ELB|ELCB/.test(sp.type) : false;
+        const brk = sp ? `${elb ? 'ELCB' : 'MCCB'} ${sp.poles}P ${sp.at}A${sp.ma ? ' ' + sp.ma + 'mA' : ''}` : '';
+        rows.push({ kind: 'L', no: T(n), name, side, v200, elb, space: false, brk, x: n.x0, y: n.top, group: gp.x });
+      }
+    }
+  }
+  rows.sort((a, b) => (a.group - b.group) || (Math.round(a.y) - Math.round(b.y)) || (a.x - b.x));
+  return { meta, light: rows, power: [] };
+}
+
+function parseNittoCubicle(g) {
+  const { frags, vfrags } = g; const T = f => nk(f.text);
+  const meta = { supplies: [], main: [], type: 'キュービクル式高圧受電設備', panel: '受変電設備' };
+  const sup = frags.find(f => /3φ3W\d+V/.test(T(f))); if (sup) meta.supplies.push({ text: T(sup), x: sup.xc, y: sup.yc });
+  const RATING = /kV|kA|kVA|kvar|^\d+A$|^\d+V$|\/\d+(-\d+)?V$|^PF\d+/i;
+  const TAG = /^(DS|LBS\d*|VCB|VCS|PAS|UGS|VCT|VT|CT|LA|SR\d*|SC\d*|T\d+|TR\d*)(\(.*\))?$/;   // e.g. "SR1(L=6%用)"
+  const eq = [];
+  for (const f of frags) {
+    const t0 = T(f); if (!TAG.test(t0)) continue; const t = t0.replace(/\(.*\)$/, '');
+    const nextTag = frags.filter(o => o !== f && TAG.test(T(o)) && Math.abs(o.xc - f.xc) < 28 && o.yc > f.yc + 3).map(o => o.yc);
+    const lim = Math.min(42, ...nextTag.map(y => y - f.yc - 2));                 // ratings belong to the nearest tag above them
+    const r = near(frags, f, 28, -3, lim).filter(o => RATING.test(T(o))).sort((a, b) => a.yc - b.yc).map(T);
+    if (eq.some(e => e.tag === t && e.ratings.length >= r.length)) continue;      // duplicate label without ratings
+    const i = eq.findIndex(e => e.tag === t); const item = { tag: t, ratings: r, x: f.xc, y: f.yc };
+    if (i >= 0) eq[i] = item; else eq.push(item);
+  }
+  const cable = frags.find(f => /^(CVT|CV|CVQ)\d+/.test(T(f)) && f.yc < 120); const bus = frags.find(f => /^KIP\d+/.test(T(f)));
+  const hv = [];   // {no,name,volt,mv,crit,poles,rem0,cat:'高圧'}
+  const fmt = mm => mm ? mm.replace(/mm$/, 'sq') : '';
+  const HVrow = (no, name, rem, volt = '6,600', mv = 1000, crit = null, sup = '3φ3W 6.6kV', poles = 3) => hv.push({ no, name, rem0: rem, volt, mv, crit, sup, poles });
+  if (cable) HVrow('引込', `高圧引込ケーブル ${fmt(T(cable))}`, '受電点～受電盤');
+  const by = tag => eq.find(e => e.tag === tag) || eq.find(e => new RegExp('^' + tag + '\\d*$').test(e.tag));
+  for (const tag of ['PAS', 'UGS', 'DS', 'VCT', 'VCB', 'VCS']) { const e = by(tag); if (e) HVrow(e.tag, { PAS: '気中負荷開閉器 PAS', UGS: '地中負荷開閉器 UGS', DS: '断路器 DS', VCT: '計器用変成器 VCT', VCB: '真空遮断器 VCB', VCS: '真空電磁接触器 VCS' }[tag], e.ratings.join(' ')); }
+  const vt = by('VT'), ct = by('CT'); if (vt || ct) HVrow('VT/CT', '計器用変圧器 VT・変流器 CT', [vt && vt.ratings.join(' '), ct && ct.ratings.join(' ')].filter(Boolean).join(' / '));
+  if (bus) HVrow('母線', `高圧母線 ${fmt(T(bus))}`, '');
+  const trs = eq.filter(e => /^(T|TR)\d*$/.test(e.tag)).sort((a, b) => a.x - b.x);
+  const lbs = eq.filter(e => /^LBS\d*$/.test(e.tag)).sort((a, b) => a.x - b.x);
+  const srs = eq.filter(e => /^(SR|SC)\d*$/.test(e.tag)).sort((a, b) => a.x - b.x);
+  for (const l of lbs) {
+    HVrow(l.tag, `負荷開閉器 ${l.tag}`, l.ratings.join(' '));
+    const t = trs.find(tr => Math.abs(tr.x - l.x) < 40); const s = srs.filter(sr => Math.abs(sr.x - l.x) < 40);
+    if (t) {
+      const ph = (t.ratings.join(' ').match(/(\d)φ/) || [])[1]; const kva = (t.ratings.join(' ').match(/\d+kVA/) || [])[0] || '';
+      const sec = (t.ratings.join(' ').match(/\d+\/(\d+(?:-\d+)?)V/) || [])[1] || '';
+      HVrow(t.tag, `変圧器 ${t.tag} ${ph ? ph + 'φ ' : ''}${kva} 一次側`, t.ratings.join(' '));
+      const lv = ph === '3' ? '3φ3W 200V' : '1φ3W 200-100V';
+      HVrow(t.tag, `変圧器 ${t.tag} 二次側(低圧) ${sec ? sec + 'V' : ''}`, t.ratings.join(' '), sec ? sec.replace('-', '/') : (ph === '3' ? '210' : '210/105'), ph === '3' ? 500 : 250, ph === '3' ? 0.2 : 0.1, lv);
+      t.ph = ph; t.kva = kva;
+    }
+    for (const sr of s) HVrow(sr.tag, `${sr.tag.startsWith('SR') ? '直列リアクトル' : '高圧進相コンデンサ'} ${sr.tag}`, sr.ratings.join(' '));
+  }
+  for (const sr of srs) if (sr.ratings.length && !hv.some(r => r.no === sr.tag)) HVrow(sr.tag, `${sr.tag.startsWith('SR') ? '直列リアクトル' : '高圧進相コンデンサ'} ${sr.tag}`, sr.ratings.join(' '));
+  for (const tr of trs) if (!hv.some(r => r.no === tr.tag)) HVrow(tr.tag, `変圧器 ${tr.tag}`, tr.ratings.join(' '));
+  const la = by('LA') || (frags.some(f => /^LA/.test(T(f))) ? { tag: 'LA', ratings: [] } : null);
+  if (la) HVrow('LA', '避雷器 LA', frags.some(f => /LAは外部/.test(T(f))) ? '外部取付' : la.ratings.join(' '));
+  // low-voltage feeders: vertical table columns "1A | MCB3P225/225 | LP-1A盤 電灯 | 100"
+  const cols = rowsBy(vfrags, f => f.xc, 2).map(c => c.sort((a, b) => b.yc - a.yc));   // reading order bottom -> top (No first)
+  const feeders = [];
+  for (const col of cols) {
+    const ts = col.map(T); if (!/^(\d[A-Z]|[a-z])$/.test(ts[0]) || !ts.some(t => /(MCCB|MCB|ELB|ELCB)\dP\d+\/\d+/.test(t))) continue;
+    const no = ts[0]; let brk = '', volt = '', size = ''; const names = [];
+    for (const t of ts.slice(1)) {
+      if (/(MCCB|MCB|ELB|ELCB)\dP\d+\/\d+/.test(t)) brk = t;
+      else if (/^\d+V$/.test(t)) volt = t.replace('V', '');
+      else if (/^\d+(\.\d+)?$/.test(t)) size = t;
+      else if (t !== 'スペース') names.push(t);
+    }
+    const name = names.join(' ');
+    if (!name) continue;
+    const x = col[0].xc; const tr = trs.length ? trs.reduce((b, c) => Math.abs(c.x - x) < Math.abs(b.x - x) ? c : b) : null;
+    const ph = tr ? tr.ph : (/(\d)P/.exec(brk) || [])[1] === '2' ? '1' : '3';
+    const sup = (ph === '3' ? '3φ3W 200V' : '1φ3W 200-100V') + (tr ? ` (${tr.tag} ${tr.ph}φ${tr.kva})` : '');
+    brk = brk.replace(/^(MCCB|MCB|ELB|ELCB)(\d)P(\d+)\/(\d+)A?$/, (m, k, p, af, at) => `${k === 'MCB' ? 'MCCB' : k} ${p}P ${at}A(${af}AF)`);
+    feeders.push({ kind: 'P', no, name, brk, btype: '', cable: size ? size + 'sq' : '', kw: '', remark: '', volt: volt || (ph === '3' ? '200' : '200/100'), sup, poles: /2P/.test(brk) ? 2 : 3, x, y: 0, ytab: 0 });
+  }
+  return { meta, hv, feeders, light: [], power: [] };
+}
+
+/* ===================== 3. PDF -> circuit table ===================== */
+function supplyLabel(t) {
+  const gc = t.startsWith('AC-GC'); t = t.replace('AC-GC', '').replace('AC', '');
+  const g = t.startsWith('G'); t = t.replace(/^G+/, '').replace(/(\dφ\dW)/, '$1 ').replace(/30A$/, '');
+  if (gc) return t.trim() + ' (商用/発電 切替 AC-GC)';
+  return (g ? '保安(発電機) ' : '') + t.trim();
+}
+const isPowerSup = s => s.includes('3φ') || s.includes('1φ2W 200V');
+const category = s => isPowerSup(s) ? '低圧動力' : '低圧電灯';
+
+async function parsePdf(file, onProgress) {
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  const pages = []; const issues = []; let project = ''; const fname = file.name.replace(/\.pdf$/i, '');
+  const tag = n => (fname ? fname + ' ' : '') + `p.${n}`;
+  for (let n = 1; n <= pdf.numPages; n++) {
+    onProgress(n, pdf.numPages);
+    const page = await pdf.getPage(n);
+    const g = await pageGeometry(page);
+    if (DBG_PAGES.has(n)) (window.__geom = window.__geom || {})[n] = g;
+    const layout = detectLayout(g);
+    if (!layout) { page.cleanup(); continue; }
+    let meta, light = [], power = [], hv = [], feeders = [];
+    if (layout === 'nichiden') { meta = pageMeta(g); light = parseLighting(g); power = parsePower(g); }
+    else if (layout === 'nitto-lp') { const r = parseNittoLighting(g); meta = r.meta; light = r.light; }
+    else { const r = parseNittoCubicle(g); meta = r.meta; hv = r.hv; feeders = r.feeders; }
+    if (meta.project && !project) project = meta.project;
+    if (!meta.panel) issues.push(`${tag(n)}: 盤名称を特定できません(タイトル欄)。`);
+    if (!light.length && !power.length && !hv.length && !feeders.length && !meta.supplies.length) issues.push(`${tag(n)}: 回路が見つかりません(リモコン制御図・スペース図など)。`);
+    pages.push({ page: n, file: fname, layout, meta, light, power, hv, feeders });
+    page.cleanup();
+  }
+  return { pages, issues, project, numPages: pdf.numPages };
+}
+
+const HV_PANEL = '受変電設備', FEED_PANEL = 'キュービクル 低圧幹線';
+function buildTable(parsed, opt) {
+  const panels = new Map();
+  for (const pg of parsed.pages) {
+    const m = pg.meta; const pname = nk(m.panel || `p${pg.page}`);
+    if (pg.layout === 'nitto-cubicle') {
+      if (!panels.has(HV_PANEL)) panels.set(HV_PANEL, { type: m.type || '', entries: [], cur: null });
+      for (const h of pg.hv) panels.get(HV_PANEL).entries.push({ kind: 'H', ...h });
+      if (pg.feeders.length && !panels.has(FEED_PANEL)) panels.set(FEED_PANEL, { type: '受変電設備 二次側幹線', entries: [], cur: null });
+      for (const f of pg.feeders) panels.get(FEED_PANEL).entries.push({ ...f, page: pg.page });
+      continue;
+    }
+    if (!panels.has(pname)) panels.set(pname, { type: m.type || '', entries: [], cur: null });
+    const P = panels.get(pname);
+    if (!P.type && m.type) P.type = m.type;
+    const sups = m.supplies.filter(s => s.y < 80);
+    if (sups.length) {
+      sups.forEach((s, i) => {
+        const lab = supplyLabel(s.text);
+        const mb = m.main.length ? m.main.reduce((b, c) => Math.abs(c.x - s.x) < Math.abs(b.x - s.x) ? c : b) : null;
+        P.entries.push({ kind: 'M', sup: lab, brk: mb ? mb.brk : '', label: mb ? mb.label : '', cable: i === 0 ? (m.cable || '') : '', page: pg.page });
+      });
+      P.cur = sups.map(s => [supplyLabel(s.text), s.x]);
+    }
+    const cur = P.cur || [['1φ3W 200-100V', 0]];
+    const nearest = x => cur.length === 1 ? cur[0][0] : cur.reduce((b, c) => Math.abs(c[1] - x) < Math.abs(b[1] - x) ? c : b)[0];
+    let rows = pg.power.slice();
+    if (pg.light.length) rows = pg.light.slice().sort((a, b) => (Math.floor(a.x / 400) - Math.floor(b.x / 400)) || (Math.round(a.y) - Math.round(b.y)) || (a.x - b.x));
+    for (const r of rows) P.entries.push({ ...r, page: pg.page, sup: nearest(r.x) });
+  }
+  const table = []; let id = 0;
+  const order = [HV_PANEL, FEED_PANEL].filter(p => panels.has(p)).concat(PANEL_ORDER.filter(p => panels.has(p)), [...panels.keys()].filter(p => !PANEL_ORDER.includes(p) && p !== HV_PANEL && p !== FEED_PANEL));
+  const push = d => table.push({ id: ++id, spare: false, kw: '', cable: '', rem0: '', ...d });
+  for (const pname of order) {
+    const P = panels.get(pname);
+    for (const e of P.entries) {
+      if (e.kind === 'H') {
+        push({ cat: '高圧', panel: pname, sup: e.sup, no: e.no, name: e.name, brk: '', volt: e.volt, mv: e.mv, crit: e.crit, poles: e.poles, rem0: e.rem0, kind: 'H' });
+      } else if (e.kind === 'M') {
+        const volt = /1φ3W/.test(e.sup) || e.sup.includes('200-100') ? '200/100' : (e.sup.includes('200') ? '200' : '100');
+        push({ cat: category(e.sup), panel: pname, sup: e.sup, no: '主幹', name: ('主幹 ' + e.label.replace('主幹/', '')).trim(), brk: e.brk ? (/^(MCB|MCCB|ELB|ELCB)/.test(e.brk) ? e.brk : 'MCCB ' + e.brk) : '', volt, poles: 3, cable: e.cable, kind: 'M' });
+      } else if (e.kind === 'L') {
+        let name = e.name.replace(/\//g, ' ');
+        if (e.space && !e.no) continue;
+        if (!e.no && !name) continue;
+        const typ = e.elb ? 'ELCB' : 'MCCB', v = e.v200 ? '200' : '100';
+        push({ cat: category(e.sup), panel: pname, sup: e.sup, no: e.no, name: name || '予備', brk: e.brk || `${typ} 2P 20A${e.elb ? ' 30mA' : ''}`, volt: v, poles: 2, kind: 'L', spare: !e.no && /^予備?$/.test(name) });
+      } else {
+        const name = e.name.replace(/\//g, ' ');
+        if (!e.no && !name) continue;
+        let brk = (e.btype ? e.btype + ' ' : '') + e.brk;
+        brk = brk.replace(/(\dP)(\d+)\/(\d+)A/, '$1 $3A($2AF)');
+        const poles = e.poles || (/^(MCCB 2P|ELCB 2P|2P)/.test(brk) ? 2 : 3);
+        const v = e.volt || (isPowerSup(e.sup) ? '200' : '100');
+        let kw = (e.kw && e.kw !== '-') ? e.kw : '';
+        push({ cat: category(e.sup), panel: pname, sup: e.sup, no: e.no, name, brk, volt: v, poles, cable: e.cable, kw, rem0: e.remark.replace(/\//g, ' '), kind: 'P' });
+      }
+    }
+  }
+  for (const d of table) d.name = d.name.replace(/¥M\+19573\s*潔/, '不潔');   // CAD glyph artefact seen in this drawing set
+  const types = {}; for (const [k, v] of panels) types[k] = v.type;
+  return { table, types, order };
+}
+
+const HV = [['引込', '高圧引込ケーブル (受電点～PAS/UGS)', '6,600'], ['PAS', '気中(地中)負荷開閉器 PAS/UGS 一次-大地', '6,600'], ['CB', '高圧引込ケーブル (PAS～キュービクル)', '6,600'],
+  ['DS/LBS', '断路器・負荷開閉器 (受電) 極間・対地', '6,600'], ['VCT', '計器用変成器 VCT 一次-大地', '6,600'], ['VCB', '真空遮断器 VCB 極間・対地', '6,600'], ['母線', '高圧母線 (R・S・T) 対地', '6,600'],
+  ['LBS', '変圧器一次 LBS (各バンク) 極間・対地', '6,600'], ['T-1', '変圧器 1φ (電灯) 一次-大地 / 一次-二次 / 二次-大地', '6,600/210-105'], ['T-2', '変圧器 3φ (動力) 一次-大地 / 一次-二次 / 二次-大地', '6,600/210'],
+  ['SC/SR', '高圧進相コンデンサ・直列リアクトル 対地', '6,600'], ['LA', '避雷器 LA 対地', '6,600']];
+
+/* derived values (computed at export so that edits and options always apply) */
+const critOf = d => d.kind === 'H' ? (d.crit ?? null) : (isPowerSup(d.sup) ? 0.2 : 0.1);
+const unitOf = d => isPowerSup(d.sup) ? 'kW' : 'W';          // 動力(3φ)は kW、100V系は W 表示
+const capCell = d => !d.kw ? null : (unitOf(d) === 'kW' && !d.kw.includes('×') && !isNaN(parseFloat(d.kw))) ? parseFloat(d.kw) : d.kw + unitOf(d);
+const mvOf = (d, opt) => d.kind === 'H' ? (d.mv || 1000) : (isPowerSup(d.sup) ? opt.mvP : opt.mvL);
+const hvRows = T => T.table.filter(d => d.kind === 'H');
+function listRemark(d) {
+  if (d.kind === 'H') return d.rem0 || '';
+  if (d.kind === 'M') return [d.cable ? '幹線 ' + d.cable : '', d.rem0].filter(Boolean).join(' ');
+  if (d.kind === 'P') return [d.rem0, d.kw ? d.kw + unitOf(d) : '', d.cable].filter(Boolean).join(' ');
+  return [d.rem0, d.cable].filter(Boolean).join(' ');
+}
+const activeRows = (T, opt) => T.table.filter(d => opt.spare || !d.spare);
+
+/* ===================== 4a. Excel: list version (one sheet, page break per panel) ===================== */
+async function buildListXlsx(T, opt) {
+  const wb = new ExcelJS.Workbook(); const ws = wb.addWorksheet('絶縁抵抗測定表');
+  const COLS = ['No.', '区分', '盤名称', '電源系統', '回路No.', '負荷名称', '遮断器', '電圧\n(V)', '測定電圧\n(V)', '判定基準\n(MΩ以上)', 'L1(R)-E', 'L2(S/N)-E', 'L3(T)-E', 'L1-L2', 'L2-L3', 'L3-L1', '判定', '備考'];
+  const WID = [5, 8, 10, 15, 7, 30, 20, 6, 7, 8, 8, 8, 8, 8, 8, 8, 6, 30]; const NC = COLS.length;
+  WID.forEach((w, i) => ws.getColumn(i + 1).width = w);
+  const thin = { style: 'thin', color: { argb: 'FF000000' } }; const B = { left: thin, right: thin, top: thin, bottom: thin };
+  const fill = c => ({ type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + c } });
+  const F_HDR = fill('D9E1F2'), F_SEC = fill('BDD7EE'), F_PNL = fill('EDEDED'), F_MAIN = fill('FFF2CC'), F_NA = fill('BFBFBF'), F_HV = fill('F8CBAD');
+  const ctr = { horizontal: 'center', vertical: 'middle', wrapText: true }, left = { horizontal: 'left', vertical: 'middle', wrapText: true };
+  const fn = { name: 'Meiryo UI', size: 9 }, fb = { name: 'Meiryo UI', size: 9, bold: true };
+  const box = (r, c1, c2, v, f, al, fl) => { for (let c = c1; c <= c2; c++) { const cell = ws.getCell(r, c); cell.border = B; cell.font = f; cell.alignment = al; if (fl) cell.fill = fl; } if (c2 > c1) ws.mergeCells(r, c1, r, c2); ws.getCell(r, c1).value = v; };
+  ws.mergeCells(1, 1, 1, NC); ws.getCell(1, 1).value = '絶 縁 抵 抗 測 定 表'; ws.getCell(1, 1).font = { name: 'Meiryo UI', size: 16, bold: true }; ws.getCell(1, 1).alignment = ctr; ws.getRow(1).height = 30;
+  const info = [['工事名称', opt.project, '測定日', '　　　年　　月　　日', '天候', ''], ['図面', opt.drawing, '気温 / 湿度', '　　　℃ /　　　％', '測定者', ''], ['測定器', '絶縁抵抗計　メーカ:　　　　型式:　　　　　校正期限:　　　　', '接地抵抗値(参考)', '　　　Ω', '立会者', '']];
+  info.forEach((row, i) => {
+    const r = 2 + i;
+    box(r, 1, 2, row[0], fn, ctr, F_HDR); box(r, 3, 8, row[1], fn, left); box(r, 9, 10, row[2], fn, ctr, F_HDR); box(r, 11, 13, row[3], fn, left); box(r, 14, 15, row[4], fn, ctr, F_HDR); box(r, 16, NC, row[5], fn, left);
+    ws.getRow(r).height = 20;
+  });
+  let r = 5;
+  ws.mergeCells(r, 1, r, NC); ws.getCell(r, 1).value = '判定基準: 電気設備技術基準 第58条(電技解釈第14条)  対地電圧150V以下:0.1MΩ以上 / 150V超300V以下:0.2MΩ以上 / 300V超:0.4MΩ以上。高圧回路は1000Vメガー、低圧は表中の測定電圧による。判定欄は対地間3値の最小値と判定基準の比較で自動表示(手入力上書き可)。「>」超過(例:100以上)は数値で入力。';
+  ws.getCell(r, 1).font = { name: 'Meiryo UI', size: 8 }; ws.getCell(r, 1).alignment = left; ws.getRow(r).height = 28;
+  const h1 = 6, h2 = 7;
+  COLS.forEach((name, i) => { const c = i + 1; if (c >= 11 && c <= 16) return; ws.mergeCells(h1, c, h2, c); ws.getCell(h1, c).value = name; });
+  ws.mergeCells(h1, 11, h1, 13); ws.getCell(h1, 11).value = '対地間 絶縁抵抗 (MΩ)'; ws.mergeCells(h1, 14, h1, 16); ws.getCell(h1, 14).value = '線間 絶縁抵抗 (MΩ)';
+  for (let c = 11; c <= 16; c++) ws.getCell(h2, c).value = COLS[c - 1];
+  for (const rr of [h1, h2]) for (let c = 1; c <= NC; c++) { const cell = ws.getCell(rr, c); cell.font = fb; cell.alignment = ctr; cell.border = B; cell.fill = F_HDR; }
+  ws.getRow(h1).height = 18; ws.getRow(h2).height = 30;
+  ws.views = [{ state: 'frozen', xSplit: 6, ySplit: h2 }];
+  let row = h2 + 1, seq = 0;
+  const secRow = (text, fl, brk) => {
+    if (brk && row > h2 + 1) ws.getRow(row - 1).addPageBreak();
+    for (let c = 1; c <= NC; c++) { const cell = ws.getCell(row, c); cell.border = B; cell.fill = fl; }
+    ws.mergeCells(row, 1, row, NC); const cell = ws.getCell(row, 1); cell.value = text; cell.font = { name: 'Meiryo UI', size: 10, bold: true }; cell.alignment = left; ws.getRow(row).height = 18; row++;
+  };
+  const dataRow = (d, fl, formula = true) => {
+    seq++;
+    const vals = [seq, d.cat, d.panel, d.sup, d.no, d.name, d.brk, d.volt, d.mv, d.crit, null, null, null, null, null, null, null, d.remark];
+    vals.forEach((v, i) => { const cell = ws.getCell(row, i + 1); cell.value = v; cell.font = fn; cell.border = B; cell.alignment = [6, 7, 18].includes(i + 1) ? left : ctr; if (fl) cell.fill = fl; });
+    if (d.poles === 2) for (const c of [13, 15, 16]) { const cell = ws.getCell(row, c); cell.value = '－'; cell.fill = F_NA; cell.alignment = ctr; }
+    if (formula) ws.getCell(row, 17).value = { formula: `IF(COUNT(K${row}:M${row})=0,"",IF(MIN(K${row}:M${row})>=J${row},"良","否"))` };
+    ws.getRow(row).height = 15; row++;
+  };
+  const act = activeRows(T, opt);
+  const hv = act.filter(d => d.kind === 'H');
+  if (hv.length) {
+    secRow('【高圧】 受変電設備  (受変電設備結線図より)', F_HV, false);
+    for (const d of hv) dataRow({ ...d, brk: d.brk || '－', mv: mvOf(d, opt), crit: critOf(d), remark: listRemark(d) }, null, d.crit != null);
+  } else if (opt.hv) {
+    secRow('【高圧】 受変電設備  ※本盤図(分電盤納入仕様書)に高圧機器の単線結線図は含まれないため、標準項目を雛形として記載。受変電設備図で名称・数量を確認して修正すること。', F_HV, false);
+    for (const [no, name, v] of HV) dataRow({ cat: '高圧', panel: '受変電設備', sup: '3φ3W 6.6kV', no, name, brk: '－', volt: v, mv: 1000, crit: null, poles: 3, remark: '' }, null, false);
+  }
+  for (const cat of ['低圧電灯', '低圧動力']) {
+    const n = act.filter(d => d.cat === cat).length; if (!n) continue;
+    secRow(`【${cat}】  回路数 ${n}`, F_SEC, true);
+    let first = true;
+    for (const pname of T.order) {
+      const rows = act.filter(d => d.cat === cat && d.panel === pname); if (!rows.length) continue;
+      secRow(`${pname}  (${T.types[pname] || ''})`, F_PNL, !first); first = false;
+      for (const d of rows) dataRow({ ...d, mv: mvOf(d, opt), crit: critOf(d), remark: listRemark(d) }, d.kind === 'M' ? F_MAIN : null);
+    }
+  }
+  ws.mergeCells(row, 1, row, NC);
+  ws.getCell(row, 1).value = '備考: 1) 測定は主幹・分岐遮断器を「切」とし、負荷側電路と大地間を測定。電子機器・LED・インバータ等が接続される回路は機器を外すか250Vで測定。 2) 単相3線式(200-100V)回路の対地電圧は100Vのため判定基準は100V/200V回路とも0.1MΩ。 3) 「予備」は遮断器実装・負荷未接続回路。 4) 遮断器欄の電灯分岐回路は図面の分岐ブレーカ仕様(MCCB/ELCB 2P 50AF/20A)による。';
+  ws.getCell(row, 1).font = { name: 'Meiryo UI', size: 8 }; ws.getCell(row, 1).alignment = left; ws.getRow(row).height = 40;
+  ws.pageSetup = { orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, printTitlesRow: `${h1}:${h2}`, printArea: `A1:R${row}`, margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3 } };
+  ws.headerFooter = { oddFooter: '&C&P / &N' };
+  return new Blob([await wb.xlsx.writeBuffer()], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+
+/* ===================== 4b. Excel: in-house format, all pages on one sheet ===================== */
+function houseEntry(d) {
+  const cab = (d.cable || '').replace('EM-', '');
+  if (d.kind === 'M') return { no: '主幹', name: d.name, cable: cab, volt: d.volt, kw: null, remark: [d.sup + (d.brk ? '  ' + d.brk : ''), d.rem0].filter(Boolean).join(' '), poles: d.poles };
+  if (d.kind === 'P') {
+    let kw = null;
+    kw = capCell(d);
+    return { no: d.no, name: d.name, cable: cab, volt: d.volt, kw, remark: [d.brk, d.rem0].filter(Boolean).join(' '), poles: d.poles };
+  }
+  let rem = d.brk.includes('ELCB') ? 'ELCB 30mA' : ''; if (d.sup.includes('保安')) rem = (rem + ' 保安(発電)回路').trim();
+  return { no: d.no, name: d.name, cable: cab, volt: d.volt, kw: capCell(d), remark: [rem, d.rem0].filter(Boolean).join(' '), poles: d.poles };
+}
+
+const safeSheetName = (s, used) => {
+  let base = s.replace(/[\[\]:*?\/\\]/g, '-').slice(0, 28) || 'sheet'; let name = base, i = 2;
+  while (used.has(name)) name = `${base}(${i++})`;
+  used.add(name); return name;
+};
+
+/* one worksheet per panel; each sheet holds that panel's pages (30-row blocks) with a page break between */
+async function buildHouseXlsx(T, opt) {
+  const S = TEMPLATE; const BLOCK = 30, ROWS = [5, 7, 9, 11, 13, 15, 17, 19];
+  const styles = S.styles.map(st => {
+    const [fname, size, bold, h, v, wrap, shrink, bl, br, bt, bb, nf, fillRgb] = st;
+    const bd = {}; if (bl) bd.left = { style: bl }; if (br) bd.right = { style: br }; if (bt) bd.top = { style: bt }; if (bb) bd.bottom = { style: bb };
+    const al = {}; if (h) al.horizontal = h; if (v) al.vertical = v === 'center' ? 'middle' : v; if (wrap) al.wrapText = true; if (shrink) al.shrinkToFit = true;
+    return { font: { name: fname || 'ＭＳ 明朝', size: size || 11, bold: !!bold }, border: bd, alignment: al, numFmt: nf && nf !== 'General' ? nf : undefined,
+             fill: fillRgb ? { type: 'pattern', pattern: 'solid', fgColor: { argb: fillRgb } } : undefined };
+  });
+  const chunk8 = entries => { const ch = []; for (let i = 0; i < entries.length; i += 8) ch.push(entries.slice(i, i + 8)); return ch.length ? ch : [[]]; };
+  const wb = new ExcelJS.Workbook(); const used = new Set();
+  const writeSheet = (sheetName, blocks) => {      // blocks: [title, label, entries<=8][]
+    const ws = wb.addWorksheet(safeSheetName(sheetName, used), { views: [{ showGridLines: !!S.gridlines }] });
+    ws.properties.defaultColWidth = S.default_colw; ws.properties.defaultRowHeight = S.default_rowh;
+    for (let c = 1; c <= 57; c++) ws.getColumn(c).width = S.colw[colLetter(c)] || S.default_colw;
+    blocks.forEach(([title, label, chunk], idx) => {
+      const off = idx * BLOCK;
+      for (const [r, c, si, v] of S.cells) {
+        const cell = ws.getCell(r + off, c); const st = styles[si];
+        cell.font = st.font; cell.border = st.border; cell.alignment = st.alignment; if (st.numFmt) cell.numFmt = st.numFmt; if (st.fill) cell.fill = st.fill;
+        if (v !== null && v !== undefined) cell.value = v;
+      }
+      for (let r = 1; r <= BLOCK; r++) { const h = S.rowh[r]; if (h) ws.getRow(r + off).height = h; }
+      for (const [c1, r1, c2, r2] of S.merges) ws.mergeCells(r1 + off, c1, r2 + off, c2);
+      ws.getCell(1 + off, 4).value = title; ws.getCell(2 + off, 19).value = label;
+      chunk.forEach((e, si) => {
+        const r = ROWS[si] + off;
+        ws.getCell(r, 1).value = e.no; ws.getCell(r, 4).value = e.name; ws.getCell(r, 15).value = e.cable || null; ws.getCell(r, 18).value = e.volt; ws.getCell(r, 21).value = e.kw; ws.getCell(r, 45).value = e.remark || null;
+        if (e.poles === 2) for (const c of [30, 36, 39]) ws.getCell(r, c).value = '－';
+      });
+      if (idx > 0) ws.getRow(off).addPageBreak();
+    });
+    const n = blocks.length;
+    ws.pageSetup = { orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: n, printArea: `A1:BE${n * BLOCK}`, horizontalCentered: true, margins: { left: S.margins.left, right: S.margins.right, top: S.margins.top, bottom: S.margins.bottom, header: 0.3, footer: 0.3 } };
+    ws.headerFooter = { oddFooter: '&C&P / &N' };
+  };
+  const pagesOf = (title, label, entries) => { const ch = chunk8(entries); return ch.map((c, i) => [title, ch.length === 1 ? label : `${label}  ${i + 1}/${ch.length}`, c]); };
+  const act = activeRows(T, opt);
+  const hv = act.filter(d => d.kind === 'H');
+  if (hv.length) writeSheet('高圧 受変電', pagesOf('高圧回路絶縁抵抗測定表', '受変電設備', hv.map(d => ({ no: d.no, name: d.name, cable: d.cable || '', volt: d.volt, kw: null, remark: [d.rem0, d.mv ? d.mv + 'Vメガー' : ''].filter(Boolean).join('  '), poles: d.poles }))));
+  else if (opt.hv) writeSheet('高圧 受変電', pagesOf('高圧回路絶縁抵抗測定表', '受変電設備(雛形)', HV.map(([no, name, v]) => ({ no, name, cable: '', volt: v, kw: null, remark: '1000Vメガー ※受変電設備図で確認', poles: 3 }))));
+  for (const pname of T.order) {
+    const blocks = [];
+    for (const [cat, title, suf] of [['低圧電灯', '電灯回路絶縁抵抗測定表', '電灯'], ['低圧動力', '動力回路絶縁抵抗測定表', '動力']]) {
+      const rows = act.filter(d => d.cat === cat && d.panel === pname); if (!rows.length) continue;
+      const both = act.some(d => d.cat !== cat && d.panel === pname);
+      blocks.push(...pagesOf(title, pname + (both ? `（${suf}）` : ''), rows.map(houseEntry)));
+    }
+    if (blocks.length) writeSheet(pname, blocks);
+  }
+  if (!wb.worksheets.length) writeSheet('絶縁抵抗測定表', [['絶縁抵抗測定表', '', []]]);
+  return new Blob([await wb.xlsx.writeBuffer()], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+function colLetter(c) { let s = ''; while (c > 0) { const m = (c - 1) % 26; s = String.fromCharCode(65 + m) + s; c = Math.floor((c - 1) / 26); } return s; }
+
+/* ===================== 5. UI ===================== */
+let PARSED = null, TABLE = null, FILE_NAME = '', VIEW = '*';
+const EXAMPLE = [
+  { id: -1, cat: '低圧電灯', panel: '1LP-1', sup: '1φ3W 200-100V', no: '主幹', name: '主幹 L101', brk: 'MCCB 3P250/200A', volt: '200/100', kw: '', cable: 'EM-CET100sq', rem0: '', kind: 'M', poles: 3 },
+  { id: -2, cat: '低圧電灯', panel: '1LP-1', sup: '1φ3W 200-100V', no: '301', name: '空調室内機 コンセント', brk: 'ELCB 2P 20A 30mA', volt: '200', kw: '', cable: '', rem0: '', kind: 'L', poles: 2 },
+  { id: -3, cat: '低圧動力', panel: 'RP-2', sup: '3φ3W 200V', no: '11', name: 'PAC3-3 空調機', brk: 'ELCB 3P 125A(125AF)', volt: '200', kw: '17.3', cable: 'EM-CET38sq', rem0: '', kind: 'P', poles: 3 }];
+
+function opts() {
+  return { mvL: +$('mvL').value, mvP: +$('mvP').value, hv: $('hv').checked, spare: $('spare').checked, project: $('proj').value.trim(), drawing: FILE_NAME ? `${FILE_NAME}  単線結線図` : '' };
+}
+function setStatus(t, err) { const s = $('status'); s.textContent = t; s.classList.toggle('err', !!err); }
+function step(k) { [1, 2, 3].forEach(i => $('st' + i).classList.toggle('on', i <= k)); }
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function rowHtml(d, editable, showSpare) {
+  const k = d.kind === 'H' ? 'H' : d.cat === '低圧動力' ? 'P' : 'L';
+  const ed = editable ? ' contenteditable="true" spellcheck="false"' : '';
+  const cls = [d.kind === 'M' ? 'main' : '', d.spare ? 'spare' : '', d.spare && !showSpare ? 'hid' : ''].filter(Boolean).join(' ');
+  const act = editable ? `<td class="act"><button type="button" data-act="add" title="この下に行を追加">＋</button><button type="button" data-act="up" title="上へ">↑</button><button type="button" data-act="down" title="下へ">↓</button><button type="button" data-act="del" title="削除">×</button></td>` : '<td></td>';
+  return `<tr data-id="${d.id}" class="${cls}"><td><span class="pill ${k}">${esc(d.cat)}</span></td><td class="sup">${esc(d.sup)}</td>` +
+    `<td class="num ed" data-f="no"${ed}>${esc(d.no)}</td><td class="ed" data-f="name"${ed}>${esc(d.name)}</td><td class="ed" data-f="brk"${ed}>${esc(d.brk)}</td>` +
+    `<td class="num ed" data-f="volt"${ed}>${esc(d.volt)}</td><td class="num ed" data-f="kw"${ed}>${esc(d.kw ? d.kw + ' ' + unitOf(d) : '')}</td><td class="ed" data-f="cable"${ed}>${esc(d.cable)}</td><td class="ed" data-f="rem0"${ed}>${esc(d.rem0)}</td>${act}</tr>`;
+}
+function renderTable(rows, filter, editable) {
+  const tb = $('tbody'); const showSpare = opts().spare; const parts = [];
+  let cur = null, shown = 0, total = 0;
+  for (const d of rows) {
+    if (filter !== '*' && d.panel !== filter) continue;
+    total++;
+    if (d.panel !== cur) {
+      cur = d.panel;
+      const pn = editable ? `<span class="pname" contenteditable="true" spellcheck="false" data-panel="${esc(d.panel)}" title="クリックで盤名を修正">${esc(d.panel)}</span>` : esc(d.panel);
+      parts.push(`<tr class="pnl"><td colspan="10">${pn}　<span class="pill">${esc(TABLE ? TABLE.types[d.panel] || '' : '例')}</span></td></tr>`);
+    }
+    parts.push(rowHtml(d, editable, showSpare));
+    if (++shown >= 400 && filter === '*') { parts.push(`<tr><td colspan="10" class="example">…以降は盤タブで表示・編集してください (全 ${rows.length} 行)</td></tr>`); break; }
+  }
+  tb.innerHTML = parts.join('');
+}
+function renderTabs() {
+  const t = $('tabs'); t.innerHTML = '';
+  const mk = (label, key) => { const b = document.createElement('button'); b.textContent = label; b.type = 'button'; b.dataset.key = key; b.classList.toggle('on', key === VIEW); b.onclick = () => { VIEW = key; [...t.children].forEach(x => x.classList.toggle('on', x === b)); renderTable(TABLE.table, VIEW, true); }; return b; };
+  t.appendChild(mk('すべて', '*'));
+  for (const p of TABLE.order) t.appendChild(mk(p, p));
+  if (VIEW !== '*' && !TABLE.order.includes(VIEW)) VIEW = '*';
+}
+function refresh() {
+  if (!TABLE) return;
+  const act = activeRows(TABLE, opts());
+  $('nPanel').textContent = TABLE.order.length; $('nLight').textContent = act.filter(d => d.cat === '低圧電灯').length; $('nPower').textContent = act.filter(d => d.cat === '低圧動力').length;
+  renderTabs(); renderTable(TABLE.table, VIEW, true);
+  $('dlList').disabled = $('dlHouse').disabled = !TABLE.table.length;
+}
+function showExample() {
+  renderTable(EXAMPLE, '*', false);
+  $('tblnote').innerHTML = '<span class="example">表示例</span>　PDFを読み込むと、この形で全回路が並びます。読み込み後はセルをクリックして直接修正でき、行の追加・並べ替え・削除、盤名の修正もできます。';
+}
+
+async function handleFile(file) { return handleFiles(file ? [file] : []); }
+async function handleFiles(fileList) {
+  const files = [...(fileList || [])].filter(f => /\.pdf$/i.test(f.name) || f.type === 'application/pdf');
+  if (!files.length) return;
+  if (!window.pdfjsLib || !window.ExcelJS) { setStatus('ライブラリを読み込めませんでした。ページを再読み込みしてください。', true); return; }
+  FILE_NAME = files.map(f => f.name.replace(/\.pdf$/i, '')).join('+');
+  $('dlList').disabled = $('dlHouse').disabled = true; step(1);
+  setStatus('読み込み中…'); $('bar').style.width = '2%';
+  try {
+    const merged = { pages: [], issues: [], project: '', numPages: 0 };
+    for (let i = 0; i < files.length; i++) {
+      const r = await parsePdf(files[i], (n, N) => { $('bar').style.width = ((i + n / N) / files.length * 100).toFixed(1) + '%'; setStatus(`解析中 ${files[i].name}  ${n} / ${N} ページ`); });
+      merged.pages.push(...r.pages); merged.issues.push(...r.issues); merged.numPages += r.numPages; if (!merged.project) merged.project = r.project;
+      if (!r.pages.length) merged.issues.push(`${files[i].name}: 結線図のページが見つかりません(ベクターPDFが必要です)。`);
+    }
+    PARSED = merged;
+    if (!PARSED.pages.length) { setStatus('結線図のページが見つかりませんでした。ベクター(文字が選択できる)PDFの盤図が必要です。', true); return; }
+    if (!$('proj').value) $('proj').value = PARSED.project || '';
+    TABLE = buildTable(PARSED, opts()); VIEW = '*';
+    $('nPage').textContent = PARSED.pages.length;
+    refresh();
+    $('tblnote').textContent = 'セルをクリックすると修正できます(Enterで確定)。主幹行は黄色、番号なしの「予備」は灰色。「スペース」(遮断器なし)は除外しています。修正内容はそのままExcelに反映されます。';
+    const ul = $('issueList'); ul.innerHTML = '';
+    (PARSED.issues.length ? PARSED.issues : ['特になし']).forEach(t => { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
+    step(2); showTsv(false);
+    setStatus(`完了: 結線図 ${PARSED.pages.length} ページ / ${TABLE.order.length} 盤 / ${TABLE.table.length} 行`);
+  } catch (e) {
+    console.error(e); setStatus('読み込みに失敗しました: ' + (e.message || e), true);
+  }
+}
+
+/* ---- editing ---- */
+const rowById = id => TABLE && TABLE.table.find(d => d.id === id);
+const nextId = () => Math.max(0, ...TABLE.table.map(d => d.id)) + 1;
+function setField(d, f, v) {
+  v = v.replace(/\n/g, ' ').trim(); d[f] = v;
+  if (f === 'brk') { if (/\b2P\b/.test(v)) d.poles = 2; else if (/\b3P\b/.test(v)) d.poles = 3; }
+  if (f === 'no' || f === 'name') d.spare = !d.no && /^予備?$/.test(d.name);
+  if (f === 'kw') d.kw = v.replace(/\s*(kw|w)\s*$/i, '').trim();      // unit is implied by the supply (動力 kW / 100V系 W)
+}
+const tbody = $('tbody');
+tbody.addEventListener('input', e => {
+  const td = e.target.closest('td.ed[data-f]'); if (!td || !TABLE) return;
+  const d = rowById(+td.closest('tr').dataset.id); if (d) setField(d, td.dataset.f, td.textContent);
+});
+tbody.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.matches('[contenteditable]')) { e.preventDefault(); e.target.blur(); }
+  if (e.key === 'Escape' && e.target.matches('[contenteditable]')) e.target.blur();
+});
+tbody.addEventListener('paste', e => {
+  if (!e.target.matches('[contenteditable]')) return;
+  e.preventDefault(); const t = (e.clipboardData || window.clipboardData).getData('text').replace(/\s+/g, ' ');
+  const sel = window.getSelection(); if (!sel.rangeCount) return; sel.deleteFromDocument(); sel.getRangeAt(0).insertNode(document.createTextNode(t)); sel.collapseToEnd();
+  e.target.dispatchEvent(new Event('input', { bubbles: true }));
+});
+tbody.addEventListener('focusout', e => {
+  const sp = e.target.closest('.pname[contenteditable]'); if (!sp || !TABLE) return;
+  const oldName = sp.dataset.panel, newName = nk(sp.textContent) || oldName;
+  if (newName === oldName) { sp.textContent = oldName; return; }
+  for (const d of TABLE.table) if (d.panel === oldName) d.panel = newName;
+  if (TABLE.order.includes(newName)) TABLE.order = TABLE.order.filter(p => p !== oldName);
+  else TABLE.order = TABLE.order.map(p => p === oldName ? newName : p);
+  TABLE.types[newName] = TABLE.types[newName] || TABLE.types[oldName] || ''; delete TABLE.types[oldName];
+  if (VIEW === oldName) VIEW = newName;
+  refresh();
+});
+tbody.addEventListener('click', e => {
+  const b = e.target.closest('button[data-act]'); if (!b || !TABLE) return;
+  const tr = b.closest('tr'); const id = +tr.dataset.id; const i = TABLE.table.findIndex(d => d.id === id); if (i < 0) return;
+  const d = TABLE.table[i]; const act = b.dataset.act;
+  if (act === 'del') { TABLE.table.splice(i, 1); }
+  else if (act === 'add') {
+    const kind = d.kind === 'M' ? (d.cat === '低圧動力' ? 'P' : 'L') : d.kind;
+    const n = { id: nextId(), cat: d.cat, panel: d.panel, sup: d.sup, no: '', name: '', brk: kind === 'L' ? 'MCCB 2P 20A' : '', volt: kind === 'L' ? '100' : d.volt, kw: '', cable: '', rem0: '', kind, poles: kind === 'L' ? 2 : 3, spare: false };
+    TABLE.table.splice(i + 1, 0, n);
+    refresh(); const cell = tbody.querySelector(`tr[data-id="${n.id}"] td[data-f="no"]`); if (cell) { cell.scrollIntoView({ block: 'nearest' }); cell.focus(); } return;
+  }
+  else if (act === 'up' || act === 'down') {
+    const j = act === 'up' ? i - 1 : i + 1;
+    if (j < 0 || j >= TABLE.table.length || TABLE.table[j].panel !== d.panel) return;
+    [TABLE.table[i], TABLE.table[j]] = [TABLE.table[j], TABLE.table[i]];
+  }
+  refresh();
+  const row = tbody.querySelector(`tr[data-id="${id}"]`); if (row) row.scrollIntoView({ block: 'nearest' });
+});
+$('reset').addEventListener('click', () => {
+  if (!PARSED) return;
+  if (!confirm('画面での修正をすべて破棄して、PDFの抽出結果に戻しますか?')) return;
+  TABLE = buildTable(PARSED, opts()); refresh();
+});
+
+/* ---- export ---- */
+const NO_SAVE_MSG = 'この表示ではファイル保存が許可されていません。共有元の方に、共有設定を「閲覧のみ」ではなく操作・編集できる権限にしてもらうか、Claudeにログインした状態で開き直してください。それでも保存できない場合は下の「コピー用テキスト」からExcelに貼り付けできます。';
+async function saveBlob(blob, filename) {
+  const st = $('dlstatus'); st.textContent = '保存の確認を待っています…';
+  const inViewer = !!(window.claude && window.claude.use);
+  let dl = inViewer ? await claude.use('downloads') : undefined;
+  if (inViewer && !dl) {                                  // not granted yet? ask once, then re-check
+    try { const perm = await claude.use('permissions'); if (perm) { const r = await perm.request(['downloads']); if (r && r.downloads === 'granted') dl = await claude.use('downloads'); } } catch (e) { /* ignore */ }
+  }
+  try {
+    if (!inViewer) {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); st.textContent = `ダウンロードしました: ${filename}`;
+    } else if (!dl) {
+      st.textContent = NO_SAVE_MSG; showTsv(true); return;
+    } else {
+      await dl.save({ filename, data: blob }); st.textContent = `保存しました: ${filename}`;
+    }
+    step(3);
+  } catch (e) {
+    const code = e && e.code;
+    if (code === 'declined') st.textContent = '保存をキャンセルしました(確認ダイアログで「保存」を選んでください)。';
+    else if (code === 'not_granted' || code === 'unavailable' || code === 'capability_disabled' || code === 'capability_removed') { st.textContent = NO_SAVE_MSG + `(${code})`; showTsv(true); }
+    else if (code === 'rate_limited') st.textContent = '保存の確認が重なっています。数秒待ってからもう一度押してください。';
+    else st.textContent = '保存できませんでした: ' + (e && (e.message || e.code) || e);
+  }
+}
+function tsvText() {
+  const o = opts(); const rows = activeRows(TABLE, o);
+  const head = ['No.', '区分', '盤名称', '電源系統', '回路No.', '負荷名称', '遮断器', '電圧(V)', '測定電圧(V)', '判定基準(MΩ)', 'L1-E', 'L2-E', 'L3-E', 'L1-L2', 'L2-L3', 'L3-L1', '判定', '備考'];
+  const clean = v => String(v ?? '').replace(/[\t\r\n]+/g, ' ');
+  return [head.join('\t')].concat(rows.map((d, i) => [i + 1, d.cat, d.panel, d.sup, d.no, d.name, d.brk, d.volt, mvOf(d, o), critOf(d) ?? '', '', '', d.poles === 2 ? '－' : '', '', d.poles === 2 ? '－' : '', d.poles === 2 ? '－' : '', '', listRemark(d)].map(clean).join('\t'))).join('\n');
+}
+function showTsv(open) {
+  if (!TABLE) return;
+  const det = $('tsv'); det.hidden = false; if (open) det.open = true;
+  $('tsvText').value = tsvText();
+}
+$('tsvCopy').addEventListener('click', async () => {
+  const ta = $('tsvText'); ta.select();
+  try { await navigator.clipboard.writeText(ta.value); $('tsvNote').textContent = 'コピーしました。Excelの A1 セルを選んで貼り付けてください。'; }
+  catch (e) { $('tsvNote').textContent = '自動コピーできませんでした。テキストを選択して Ctrl+C でコピーしてください。'; }
+});
+(async () => {          // tell the viewer up front when saving is not available in this view
+  try {
+    if (!(window.claude && window.claude.use)) return;
+    const perm = await claude.use('permissions'); if (!perm) return;
+    const s = await perm.state('downloads');
+    if (s === 'unavailable') { $('dlstatus').textContent = '※ この表示ではExcel保存が使えません(閲覧権限)。' + NO_SAVE_MSG; }
+  } catch (e) { /* ignore */ }
+})();
+async function download(kind) {
+  if (!TABLE) return;
+  if (document.activeElement && document.activeElement.matches('[contenteditable]')) document.activeElement.blur();
+  const o = opts(); const base = (o.project || FILE_NAME || '絶縁抵抗測定表').replace(/[\\/:*?"<>|]/g, '_');
+  const btn = kind === 'list' ? $('dlList') : $('dlHouse'); btn.disabled = true; $('dlstatus').textContent = 'Excelを作成中…';
+  try {
+    await new Promise(r => setTimeout(r, 30));
+    const blob = kind === 'list' ? await buildListXlsx(TABLE, o) : await buildHouseXlsx(TABLE, o);
+    await saveBlob(blob, `絶縁抵抗測定表_${base}${kind === 'list' ? '' : '_社内書式'}.xlsx`);
+  } catch (e) { console.error(e); $('dlstatus').textContent = 'Excelの作成に失敗しました: ' + (e.message || e); }
+  btn.disabled = false;
+}
+
+const drop = $('drop');
+$('file').addEventListener('change', e => handleFiles(e.target.files));
+['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
+drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('file').click(); } });
+$('spare').addEventListener('change', refresh);
+$('dlList').addEventListener('click', () => download('list'));
+$('dlHouse').addEventListener('click', () => download('house'));
+showExample();
+
+/* debug hook: ?pdf=<url> loads a PDF automatically; &post=1 uploads results to the same origin (local testing only) */
+(async () => {
+  const q = new URLSearchParams(location.search); const u = q.get('pdf'); if (!u) return;
+  try {
+    const files = [];
+    for (const one of u.split(',')) { const res = await fetch(one); files.push(new File([await res.blob()], one.split('/').pop(), { type: 'application/pdf' })); }
+    await handleFiles(files);
+    if (q.get('post') && TABLE) {
+      await fetch('/upload?name=table.json', { method: 'POST', body: JSON.stringify(TABLE) });
+      await fetch('/upload?name=list.xlsx', { method: 'POST', body: await buildListXlsx(TABLE, opts()) });
+      await fetch('/upload?name=house.xlsx', { method: 'POST', body: await buildHouseXlsx(TABLE, opts()) });
+      $('dlstatus').textContent = 'debug: uploaded';
+    }
+  } catch (e) { console.error(e); setStatus('debug load failed: ' + e.message, true); }
+})();
+</script>

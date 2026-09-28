@@ -1,0 +1,878 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>解体機器の良否記録</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#f3f5f4; --surface:#ffffff; --ink:#1b2632; --muted:#5b6773; --line:#d5dbd8;
+  --accent:#d4650b; --accent-soft:#fbe9da; --on-accent:#ffffff;
+  --good:#23794a; --good-bg:#e1f2e7; --warn:#a86a00; --warn-bg:#fdf1d6; --bad:#b8322a; --bad-bg:#fbe3e0;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --sans:"BIZ UDPGothic","Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#141b21; --surface:#1d262e; --ink:#e6ebef; --muted:#9aa6b1; --line:#33404b;
+    --accent:#f08a3a; --accent-soft:#3a2716; --on-accent:#1b1208;
+    --good:#5cc88a; --good-bg:#16311f; --warn:#e8b04a; --warn-bg:#35290f; --bad:#f07469; --bad-bg:#3a1a17;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#141b21; --surface:#1d262e; --ink:#e6ebef; --muted:#9aa6b1; --line:#33404b;
+  --accent:#f08a3a; --accent-soft:#3a2716; --on-accent:#1b1208;
+  --good:#5cc88a; --good-bg:#16311f; --warn:#e8b04a; --warn-bg:#35290f; --bad:#f07469; --bad-bg:#3a1a17;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:64px}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.7;padding-inline:16px;padding-block:0 56px}
+.wrap{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1,h2,h3{text-wrap:balance;line-height:1.35;margin:0}
+h1{font-size:1.55rem}
+h2{font-size:1.3rem;display:flex;align-items:center;gap:10px}
+h2 .tag{font-size:.75rem;letter-spacing:.08em;background:var(--accent);color:var(--on-accent);padding:2px 10px;border-radius:4px;font-family:var(--mono)}
+h3{font-size:1.05rem}
+p{margin:0}
+.lead{color:var(--muted)}
+nav.jump{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);margin-inline:-16px;padding:10px 16px;border-bottom:1px solid var(--line);display:flex;gap:8px;overflow-x:auto}
+nav.jump a{flex:none;text-decoration:none;color:var(--ink);font-size:.88rem;font-weight:700;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+nav.jump a.torec{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+header{display:flex;flex-direction:column;gap:10px;padding-top:18px}
+.rule{background:var(--accent-soft);border-left:4px solid var(--accent);padding:14px 16px;border-radius:0 6px 6px 0;font-weight:700}
+.rule small{display:block;font-weight:400;color:var(--muted);margin-top:4px}
+.sitebox{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+section{display:flex;flex-direction:column;gap:16px}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px;counter-reset:s}
+.steps>li{counter-increment:s;display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start}
+.steps>li::before{content:counter(s);width:34px;height:34px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-family:var(--mono);font-weight:600}
+.steps>li>div{display:flex;flex-direction:column;gap:4px;padding-top:3px}
+.steps ul{margin:0;padding-left:1.2em}
+.photos{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+figure img{display:block;width:100%;aspect-ratio:3/4;object-fit:cover}
+figcaption{padding:8px 10px;font-size:.85rem;line-height:1.5}
+.pill{display:inline-block;font-size:.78rem;font-weight:700;padding:1px 8px;border-radius:999px;margin-right:4px;white-space:nowrap}
+.pill.good{background:var(--good-bg);color:var(--good)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.92rem;background:var(--surface)}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+th{background:var(--bg);font-weight:700}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tool{background:var(--surface);border:2px solid var(--ink);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:16px}
+.sub{font-size:.8rem;font-weight:700;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+label{display:flex;flex-direction:column;gap:4px;font-size:.88rem;font-weight:700}
+label .h{font-weight:400;color:var(--muted);font-size:.8rem}
+input,select,textarea{font:inherit;font-family:var(--mono);font-size:1.05rem;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:100%}
+select,textarea,input[type="text"]{font-family:var(--sans)}
+textarea{min-height:64px;resize:vertical;font-size:.95rem}
+input[readonly]{opacity:.75}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.seg button{font:inherit;font-size:.92rem;padding:8px 14px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:700}
+.checks{display:flex;flex-direction:column;gap:6px}
+.checks label{flex-direction:row;align-items:center;gap:10px;font-weight:400;font-size:.95rem}
+.checks input{width:20px;height:20px;flex:none;accent-color:var(--accent)}
+.verdict{border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);background:var(--bg)}
+.verdict .big{font-size:1.4rem;font-weight:700}
+.verdict.good{background:var(--good-bg);border-color:var(--good)} .verdict.good .big{color:var(--good)}
+.verdict.warn{background:var(--warn-bg);border-color:var(--warn)} .verdict.warn .big{color:var(--warn)}
+.verdict.bad{background:var(--bad-bg);border-color:var(--bad)} .verdict.bad .big{color:var(--bad)}
+.verdict ul{margin:0;padding-left:1.2em;font-size:.92rem}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap}
+.thumbs img{width:84px;height:84px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.btn{font:inherit;font-weight:700;font-size:1rem;padding:12px 18px;border-radius:8px;border:0;background:var(--accent);color:var(--on-accent);cursor:pointer}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:400;font-size:.88rem;padding:6px 12px}
+.btn.danger{background:transparent;color:var(--bad);border:1px solid var(--bad);font-weight:400;font-size:.85rem;padding:4px 10px}
+.saverow{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.status{font-size:.9rem}
+.status.ok{color:var(--good);font-weight:700}
+.status.ng{color:var(--bad);font-weight:700}
+.safety{border:2px solid var(--bad);border-radius:8px;padding:14px 16px;background:var(--surface)}
+.safety h2{color:var(--bad);font-size:1.1rem;margin-bottom:6px}
+.safety ul{margin:0;padding-left:1.2em}
+.note{font-size:.85rem;color:var(--muted)}
+.notice{border:1px dashed var(--line);border-radius:8px;padding:12px 14px;font-size:.9rem;color:var(--muted);background:var(--surface)}
+hr{border:0;border-top:1px solid var(--line);margin:0}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.summary div{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column}
+.summary b{font-family:var(--mono);font-size:1.6rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.summary .good b{color:var(--good)} .summary .warn b{color:var(--warn)} .summary .bad b{color:var(--bad)}
+.summary span{font-size:.8rem;color:var(--muted)}
+.reclist{display:flex;flex-direction:column;gap:10px}
+.rec{background:var(--surface);border:1px solid var(--line);border-left-width:5px;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.rec.good{border-left-color:var(--good)} .rec.warn{border-left-color:var(--warn)} .rec.bad{border-left-color:var(--bad)}
+.rec .top{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.rec .no{font-family:var(--mono);font-weight:600;font-size:1.05rem}
+.rec .meta{font-size:.8rem;color:var(--muted)}
+.rec .val{font-size:.9rem}
+.rec .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.filters{display:flex;flex-wrap:wrap;gap:12px;align-items:end}
+.filters label{min-width:160px;flex:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+.back{font-size:.85rem;color:var(--muted);text-decoration:none}
+</style>
+</head>
+<body>
+
+<nav class="jump" aria-label="ページ内の移動">
+  <a href="../">≡ メニュー</a>
+  <a href="#flow">作業の流れ</a>
+  <a href="#panel">A パネル</a>
+  <a href="#battery">B バッテリー</a>
+  <a href="#other">C その他機器</a>
+  <a href="#records" class="torec">記録一覧</a>
+</nav>
+
+<div class="wrap">
+
+<header>
+  <h1>解体機器の良否判定と記録</h1>
+  <p class="lead">解体した直後に、1台ずつ「番号を付ける → 測る → 判定する → 記録する」を行うための手順書です。記録ボタンを押すと、結果が<b>この端末の中</b>に保存されます。作業が終わったら、ページ下の「記録一覧」から<b>CSVを担当者に送って</b>ください。</p>
+  <p class="rule">迷ったら、良品と並べて同じ条件で測り、比べる
+    <small>天気・照明・時刻で値は大きく変わります。数値そのものより、基準品との比較のほうが確実です。</small></p>
+  <div class="sitebox">
+    <div class="grid">
+      <label for="site">現場名<input id="site" type="text" placeholder="例：○○工場" autocomplete="off"></label>
+      <label for="by">記録者<input id="by" type="text" placeholder="例：山田" autocomplete="off"></label>
+    </div>
+    <div>
+      <p style="font-size:.88rem;font-weight:700;margin-bottom:6px">いま作業している地点</p>
+      <div class="seg" id="loc" role="group" aria-label="設置地点">
+        <button type="button" data-v="A" aria-pressed="true">A地点</button>
+        <button type="button" data-v="B" aria-pressed="false">B地点</button>
+        <button type="button" data-v="C" aria-pressed="false">C地点</button>
+      </div>
+    </div>
+    <p class="note">各地点の構成：<b>200Wパネル 2枚（直列）</b>＋<b>バッテリー M27MF 2台（直列・24V）</b>＋チャージコントローラなど。地点を切り替えると、番号が「A-P1」「B-B1」のように自動で変わります。現場名・記録者・地点は、この端末に記憶されます。</p>
+  </div>
+</header>
+
+<div class="safety">
+  <h2>作業前の注意</h2>
+  <ul>
+    <li>パネルは光が当たると常に発電しています。外す前に<b>毛布や段ボールで表面を覆って</b>ください。</li>
+    <li>200Wパネル2枚を直列にすると、開放電圧は<b>約45〜90V</b>になります。感電のおそれがあるので、絶縁手袋を着けてください。</li>
+    <li>パネル測定器（ZIBOO FT-1000W）の上限は <b>80V</b> です。直列をほどいて、<b>必ず1枚ずつ</b>測ってください。</li>
+    <li>バッテリーは2台直列（24V）です。<b>−（黒）の配線から先に</b>外し、次に2台をつなぐ渡り線、最後に＋を外します。工具で＋と−をまたがないでください（火花・やけど・爆発の危険）。</li>
+    <li>バッテリーテスターは12V用です。<b>1台ずつ</b>測ってください（2台まとめて測らない）。</li>
+    <li>液漏れや膨らみのあるバッテリーには触らず、写真だけ撮って責任者に報告してください。</li>
+  </ul>
+</div>
+
+<!-- ============ FLOW ============ -->
+<section id="flow">
+  <h2>作業の流れ</h2>
+  <ol class="steps">
+    <li><div>
+      <h3>解体前に全体を撮影する</h3>
+      <p>配線のつながりが分かるように、全体の写真を1〜2枚撮ります。</p>
+    </div></li>
+    <li><div>
+      <h3>決まった順番で外す</h3>
+      <ul>
+        <li>パネルを覆って、発電を止める</li>
+        <li>負荷（照明など）のスイッチを切る</li>
+        <li>チャージコントローラからパネルの配線を外し、2枚をつなぐコネクタも外す</li>
+        <li>バッテリーを外す（−配線 → 渡り線 → ＋配線の順）</li>
+        <li>チャージコントローラなど、残りの機器を外す</li>
+      </ul>
+    </div></li>
+    <li><div>
+      <h3>外した機器にすぐ番号を貼る</h3>
+      <p>テープに書いて、本体に貼ります。1地点あたりの番号は次のとおりです（A地点の例）。</p>
+      <p><b>パネル：A-P1、A-P2</b>　<b>バッテリー：A-B1、A-B2</b>　<b>その他：A-C1…</b></p>
+    </div></li>
+    <li><div>
+      <h3>1台ずつ測って判定する</h3>
+      <p>このページの A・B・C の判定ツールに数値を入れ、写真を付けて<b>「記録する」</b>を押します。</p>
+    </div></li>
+    <li><div>
+      <h3>判定ごとに置き場を分ける</h3>
+      <p><span class="pill good">良</span><span class="pill warn">要確認</span><span class="pill bad">不良</span>の3か所に分けて置きます。テープの色を緑・黄・赤に分けると、あとで混ざりません。</p>
+    </div></li>
+    <li><div>
+      <h3>最後に「記録一覧」で数を確認する</h3>
+      <p>地点ごとに、パネル2枚・バッテリー2台がそろって記録されているかを確認して、作業終了です。</p>
+    </div></li>
+  </ol>
+</section>
+
+<hr>
+
+<!-- ============ PANEL ============ -->
+<section id="panel">
+  <h2><span class="tag">A</span>ソーラーパネル</h2>
+  <ol class="steps">
+    <li><div><h3>裏の銘板を撮影する</h3><p><b>Open-Circuit Voltage（Voc）</b>と<b>Short-Circuit Current（Isc）</b>の2つの数字を使います。</p></div></li>
+    <li><div><h3>覆いを外して、パネルを太陽に向ける</h3><p>地面に置いたままでも構いません。影がかからないようにしてください。</p></div></li>
+    <li><div><h3>測定器につないで AUTO を押す</h3><p>パネルの赤ケーブル（＋）と黒ケーブル（−）をつなぎます。画面下段の左が <b>Voc（電圧）</b>、右が <b>Isc（電流）</b> です。</p></div></li>
+    <li><div><h3>表と裏を見て、傷みがないか確認する</h3><p>ガラスの割れ、焼け跡、裏面の焦げやシミ、ケーブルの傷がないかを見ます。</p></div></li>
+    <li><div><h3>同じ地点の2枚を続けて測り、比べる</h3><p>同じ時刻・同じ向きで測った2枚は、健全ならほぼ同じ値になります。片方だけ電圧や電流が1割以上低ければ、低いほうを「要確認」にします。</p></div></li>
+  </ol>
+
+  <p class="note">下の写真は、別の型式のパネルで行ったサンプル測定です。表示の読み方の参考にしてください。</p>
+  <div class="photos">
+    <figure><img src="img/p2.jpg" alt="RENOGY 100Wパネルの銘板。Voc 24.4V、Isc 5.16A" loading="lazy"><figcaption>銘板の例：Voc 24.4V、Isc 5.16A</figcaption></figure>
+    <figure><img src="img/p1.jpg" alt="測定器の表示。Voc 21.7V、Isc 0.4A" loading="lazy"><figcaption>表示の例：下段の左 Voc 21.7V、右 Isc 0.4A（小雨）</figcaption></figure>
+    <figure><img src="img/p11.jpg" alt="室内で測った50Wパネル。Voc 12.5V" loading="lazy"><figcaption><span class="pill good">発電あり</span>室内 Voc 12.5V（銘板の51%）</figcaption></figure>
+    <figure><img src="img/p12.jpg" alt="室内で測った不良の100Wパネル。Voc 5.9V" loading="lazy"><figcaption><span class="pill bad">発電不良</span>室内 Voc 5.9V（銘板の24%）</figcaption></figure>
+  </div>
+
+  <div class="tool" id="ptool">
+    <h3>パネル判定・記録</h3>
+    <p class="sub">機器</p>
+    <div class="grid">
+      <label for="pNo">番号<input id="pNo" type="text" value="A-P1" autocomplete="off"></label>
+      <label for="pType">型式
+        <select id="pType">
+          <option value="p200" selected>200Wパネル（銘板の値を入力）</option>
+          <option value="rng100">RENOGY RNG-100DB-H（100W）</option>
+          <option value="rng50">RENOGY RNG-50DB-H（50W）</option>
+          <option value="das320">DAS-LOCP-320（320W）</option>
+          <option value="custom">その他（銘板の値を入力）</option>
+        </select>
+      </label>
+      <label for="pModel" id="pModelWrap" hidden>型式名<span class="h">銘板の Model / Module Type</span><input id="pModel" type="text" autocomplete="off"></label>
+      <label for="pVocN">銘板 Voc（V）<input id="pVocN" type="number" step="0.01" inputmode="decimal"></label>
+      <label for="pIscN">銘板 Isc（A）<input id="pIscN" type="number" step="0.01" inputmode="decimal"></label>
+    </div>
+    <p class="sub">測定</p>
+    <div class="seg" id="pCond" role="group" aria-label="測ったときの条件">
+      <button type="button" data-v="sun" aria-pressed="true">晴れ（昼）</button>
+      <button type="button" data-v="cloud" aria-pressed="false">曇り・雨</button>
+      <button type="button" data-v="indoor" aria-pressed="false">室内</button>
+    </div>
+    <div class="grid">
+      <label for="pVoc">測定 Voc（V）<input id="pVoc" type="number" step="0.1" inputmode="decimal"></label>
+      <label for="pIsc">測定 Isc（A）<input id="pIsc" type="number" step="0.1" inputmode="decimal"></label>
+      <label for="pRef" id="pRefWrap" hidden>基準品の室内 Voc（V）<span class="h">同じ型式の良品を同じ場所で測った値（任意）</span><input id="pRef" type="number" step="0.1" inputmode="decimal"></label>
+    </div>
+    <p class="sub">外観（当てはまるものにチェック）</p>
+    <div class="checks" id="pDef">
+      <label><input type="checkbox" value="ガラス割れ" data-lv="bad">ガラスの割れ</label>
+      <label><input type="checkbox" value="焼け・焦げ" data-lv="bad">セルや裏面の焼け・焦げ</label>
+      <label><input type="checkbox" value="裏面のシミ・変色" data-lv="warn">裏面のシミ・変色、セルの変色</label>
+      <label><input type="checkbox" value="端子箱・ケーブル損傷" data-lv="warn">端子箱・ケーブル・コネクタの傷み</label>
+    </div>
+    <div class="verdict" id="pOut" aria-live="polite"></div>
+    <p class="sub">記録</p>
+    <div class="grid">
+      <label for="pFinal">最終判定
+        <select id="pFinal"><option value="auto">自動判定のとおり</option><option value="good">良</option><option value="warn">要確認</option><option value="bad">不良</option></select>
+      </label>
+      <label for="pPhoto">写真（2枚まで）<span class="h">銘板と測定器の表示</span><input id="pPhoto" type="file" accept="image/*" multiple></label>
+    </div>
+    <div class="thumbs" id="pThumbs"></div>
+    <label for="pMemo">メモ<textarea id="pMemo" placeholder="気付いたことがあれば"></textarea></label>
+    <div class="saverow"><button type="button" class="btn" id="pSave">記録する</button><span class="status" id="pStatus" aria-live="polite"></span></div>
+    <p class="note">200Wパネルの銘板の値は、1枚目で入力すれば2枚目以降も残ります。</p>
+  </div>
+
+  <div class="tbl">
+    <table>
+      <thead><tr><th>条件</th><th>見るもの</th><th><span class="pill good">良</span></th><th><span class="pill warn">要確認</span></th><th><span class="pill bad">不良</span></th></tr></thead>
+      <tbody>
+        <tr><td>晴れ（昼）</td><td>電圧 ÷ 銘板Voc</td><td class="n">85%以上</td><td class="n">60〜85%</td><td class="n">60%未満</td></tr>
+        <tr><td>晴れ（昼）</td><td>電流 ÷ 銘板Isc</td><td class="n">75%以上</td><td class="n">55〜75%</td><td class="n">55%未満</td></tr>
+        <tr><td>曇り・雨</td><td>電圧 ÷ 銘板Voc</td><td class="n">80%以上</td><td class="n">60〜80%</td><td class="n">60%未満</td></tr>
+        <tr><td>室内</td><td>電圧 ÷ 基準品の室内電圧</td><td class="n">80%以上</td><td class="n">50〜80%</td><td class="n">50%未満</td></tr>
+        <tr><td>どの条件でも</td><td>電圧</td><td colspan="2">—</td><td class="n">0V（断線）</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">曇りや雨の日は、電流で良否を判定しません（光が弱すぎるため）。電流まで判定したいときは、晴れた日の11〜13時に測り直してください。</p>
+</section>
+
+<hr>
+
+<!-- ============ BATTERY ============ -->
+<section id="battery">
+  <h2><span class="tag">B</span>バッテリー（12V 鉛）</h2>
+  <ol class="steps">
+    <li><div><h3>上面の丸い窓（インジケータ）を見る</h3>
+      <p><span class="pill good">緑</span>次の手順へ　<span class="pill warn">黒</span>充電不足　<span class="pill bad">白・透明</span><b>その時点で不良</b>（液不足。充電しても直りません）</p></div></li>
+    <li><div><h3>テスターを＋（赤）と−（黒）につなぐ</h3><p>表示される<b>電圧（V）</b>と<b>内部抵抗（mΩ）</b>を撮影します。</p></div></li>
+    <li><div><h3>テスターの「GOOD」表示だけで判断しない</h3><p>下の写真の不良品も、テスターの表示は「GOOD」でした。<b>インジケータの色</b>と<b>同じ型式の良品との内部抵抗の比較</b>で判断します。</p></div></li>
+    <li><div><h3>直列の2台を比べる</h3><p>2台は同じ条件で使われてきたため、健全ならほぼ同じ値になります。<b>電圧が0.2V以上違う</b>、または<b>内部抵抗が1.25倍以上違う</b>ときは、悪いほうを「要確認」にします。記録一覧の「地点ごとの確認」に差が自動で表示されます。</p></div></li>
+  </ol>
+
+  <p class="note">下の写真はサンプル測定です。M27MFの良品の内部抵抗は約4.8mΩでした（判定ツールの基準値に入れてあります）。</p>
+  <div class="photos">
+    <figure><img src="img/p6.jpg" alt="健全なバッテリーのインジケータ。緑色" loading="lazy"><figcaption><span class="pill good">健全</span>インジケータがはっきり緑</figcaption></figure>
+    <figure><img src="img/p7.jpg" alt="健全なバッテリーのテスター表示。12.47V、4.83mΩ" loading="lazy"><figcaption><span class="pill good">健全</span>12.47V、4.83mΩ</figcaption></figure>
+    <figure><img src="img/p8.jpg" alt="不良バッテリーのインジケータ。白っぽく透明" loading="lazy"><figcaption><span class="pill bad">不良</span>インジケータが白っぽく透明</figcaption></figure>
+    <figure><img src="img/p9.jpg" alt="不良バッテリーのテスター表示。12.57V、6.08mΩ、GOOD表示" loading="lazy"><figcaption><span class="pill bad">不良</span>12.57V、6.08mΩ（それでも表示はGOOD）</figcaption></figure>
+  </div>
+
+  <div class="tool" id="btool">
+    <h3>バッテリー判定・記録</h3>
+    <p class="sub">機器</p>
+    <div class="grid">
+      <label for="bNo">番号<input id="bNo" type="text" value="A-B1" autocomplete="off"></label>
+      <label for="bModel">型式<span class="h">ラベルの表記</span><input id="bModel" type="text" value="M27MF" autocomplete="off"></label>
+    </div>
+    <p class="sub">インジケータの色</p>
+    <div class="seg" id="bInd" role="group" aria-label="インジケータの色">
+      <button type="button" data-v="green" aria-pressed="false">緑</button>
+      <button type="button" data-v="black" aria-pressed="false">黒</button>
+      <button type="button" data-v="clear" aria-pressed="false">白・透明</button>
+      <button type="button" data-v="none" aria-pressed="false">窓なし</button>
+    </div>
+    <p class="sub">測定</p>
+    <div class="grid">
+      <label for="bV">電圧（V）<input id="bV" type="number" step="0.01" inputmode="decimal"></label>
+      <label for="bR">内部抵抗（mΩ）<input id="bR" type="number" step="0.01" inputmode="decimal"></label>
+      <label for="bRef">基準品の内部抵抗（mΩ）<span class="h">M27MF良品のサンプル値</span><input id="bRef" type="number" step="0.01" inputmode="decimal" value="4.83"></label>
+    </div>
+    <p class="sub">外観（当てはまるものにチェック）</p>
+    <div class="checks" id="bDef">
+      <label><input type="checkbox" value="膨らみ・変形" data-lv="bad">ケースの膨らみ・変形</label>
+      <label><input type="checkbox" value="液漏れ" data-lv="bad">液漏れ・ケースの割れ</label>
+      <label><input type="checkbox" value="端子の腐食" data-lv="warn">端子の腐食（白い粉・緑さび）</label>
+    </div>
+    <div class="verdict" id="bOut" aria-live="polite"></div>
+    <p class="sub">記録</p>
+    <div class="grid">
+      <label for="bFinal">最終判定
+        <select id="bFinal"><option value="auto">自動判定のとおり</option><option value="good">良</option><option value="warn">要確認</option><option value="bad">不良</option></select>
+      </label>
+      <label for="bPhoto">写真（2枚まで）<span class="h">インジケータとテスターの表示</span><input id="bPhoto" type="file" accept="image/*" multiple></label>
+    </div>
+    <div class="thumbs" id="bThumbs"></div>
+    <label for="bMemo">メモ<textarea id="bMemo" placeholder="気付いたことがあれば"></textarea></label>
+    <div class="saverow"><button type="button" class="btn" id="bSave">記録する</button><span class="status" id="bStatus" aria-live="polite"></span></div>
+  </div>
+
+  <div class="tbl">
+    <table>
+      <thead><tr><th>項目</th><th><span class="pill good">良</span></th><th><span class="pill warn">要確認</span></th><th><span class="pill bad">不良</span></th></tr></thead>
+      <tbody>
+        <tr><td>インジケータ</td><td>緑</td><td>黒（充電してから再測定）</td><td>白・透明</td></tr>
+        <tr><td>電圧</td><td class="n">12.4V以上</td><td class="n">12.0〜12.4V</td><td class="n">12.0V未満（充電しても戻らない）</td></tr>
+        <tr><td>内部抵抗 ÷ 基準品</td><td class="n">1.25倍以下</td><td class="n">1.25〜1.5倍</td><td class="n">1.5倍超</td></tr>
+        <tr><td>外観</td><td>異常なし</td><td>端子の腐食</td><td>膨らみ・液漏れ</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr>
+
+<!-- ============ OTHER ============ -->
+<section id="other">
+  <h2><span class="tag">C</span>その他の機器（チャージコントローラ・インバータ等）</h2>
+  <ol class="steps">
+    <li><div><h3>型式ラベルを撮影する</h3><p>本体の横や裏にあるラベルを撮ります。</p></div></li>
+    <li><div><h3>解体前に動いていたかを思い出す</h3><p>表示やランプが正常に点いていたかどうかです。分からなければチェックしないでください。</p></div></li>
+    <li><div><h3>外観を確認する</h3><p>焦げ跡、焦げ臭さ、膨らみ、水濡れ、さびを見ます。</p></div></li>
+  </ol>
+
+  <div class="tool" id="otool">
+    <h3>その他機器 判定・記録</h3>
+    <p class="sub">機器</p>
+    <div class="grid">
+      <label for="oNo">番号<input id="oNo" type="text" value="A-C1" autocomplete="off"></label>
+      <label for="oKind">種類
+        <select id="oKind">
+          <option>チャージコントローラ</option>
+          <option>インバータ</option>
+          <option>配線・ブレーカ類</option>
+          <option>その他</option>
+        </select>
+      </label>
+      <label for="oModel">型式<input id="oModel" type="text" autocomplete="off"></label>
+    </div>
+    <p class="sub">確認（当てはまるものにチェック）</p>
+    <div class="checks" id="oDef">
+      <label><input type="checkbox" id="oWorked">解体前に正常に動いていた（表示・ランプが正常）</label>
+      <label><input type="checkbox" value="焼け・焦げ臭" data-lv="bad">焼け跡・焦げ臭さ</label>
+      <label><input type="checkbox" value="膨らみ・変形・割れ" data-lv="bad">膨らみ・変形・割れ</label>
+      <label><input type="checkbox" value="水濡れ・さび" data-lv="warn">水濡れの跡・さび・腐食</label>
+      <label><input type="checkbox" value="端子・配線損傷" data-lv="warn">端子・配線の傷み</label>
+    </div>
+    <div class="verdict" id="oOut" aria-live="polite"></div>
+    <p class="sub">記録</p>
+    <div class="grid">
+      <label for="oFinal">最終判定
+        <select id="oFinal"><option value="auto">自動判定のとおり</option><option value="good">良</option><option value="warn">要確認</option><option value="bad">不良</option></select>
+      </label>
+      <label for="oPhoto">写真（2枚まで）<span class="h">型式ラベルと全体</span><input id="oPhoto" type="file" accept="image/*" multiple></label>
+    </div>
+    <div class="thumbs" id="oThumbs"></div>
+    <label for="oMemo">メモ<textarea id="oMemo" placeholder="気付いたことがあれば"></textarea></label>
+    <div class="saverow"><button type="button" class="btn" id="oSave">記録する</button><span class="status" id="oStatus" aria-live="polite"></span></div>
+  </div>
+</section>
+
+<hr>
+
+<!-- ============ RECORDS ============ -->
+<section id="records">
+  <h2>記録一覧</h2>
+  <div class="notice" id="dbNotice">記録を読み込んでいます…</div>
+  <div class="filters" id="filters" hidden>
+    <label for="fSite">現場<select id="fSite"></select></label>
+    <label for="fKind">種類<select id="fKind"><option value="">すべて</option><option value="panel">パネル</option><option value="battery">バッテリー</option><option value="other">その他</option></select></label>
+    <button type="button" class="btn ghost" id="csvBtn">CSVで保存</button>
+    <button type="button" class="btn ghost" id="shareBtn" hidden>CSVを送る（LINE・メール等）</button>
+  </div>
+  <p class="note">記録はこの端末のブラウザの中だけにあります。ほかの人の端末からは見えません。ブラウザの履歴やデータを消すと記録も消えるので、作業が終わったら必ずCSVを送ってください。</p>
+  <div id="locbox" hidden>
+    <h3 style="margin-bottom:8px">地点ごとの確認</h3>
+    <div class="tbl"><table id="loctable"></table></div>
+  </div>
+  <div class="summary" id="summary" hidden>
+    <div class="good"><b id="cGood">0</b><span>良</span></div>
+    <div class="warn"><b id="cWarn">0</b><span>要確認</span></div>
+    <div class="bad"><b id="cBad">0</b><span>不良</span></div>
+  </div>
+  <div class="reclist" id="reclist"></div>
+  <p class="note" id="csvNote" hidden></p>
+</section>
+
+</div>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var num=function(id){var v=parseFloat($(id).value);return isFinite(v)?v:null};
+  var pct=function(x){return Math.round(x*100)+'%'};
+  var rank={good:0,warn:1,bad:2};
+  var LB={good:'良',warn:'要確認',bad:'不良'};
+  var HEAD={good:'良',warn:'要確認',bad:'不良の疑い'};
+  var KIND={panel:'パネル',battery:'バッテリー',other:'その他'};
+  var P={p200:{name:'200Wパネル',edit:true},rng100:{voc:24.4,isc:5.16,name:'RENOGY RNG-100DB-H'},rng50:{voc:24.3,isc:2.75,name:'RENOGY RNG-50DB-H'},das320:{voc:44.63,isc:9.09,name:'DAS-LOCP-320'}};
+  function worst(a,b){return rank[a]>=rank[b]?a:b}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function lsGet(k){try{return localStorage.getItem(k)||''}catch(e){return ''}}
+  function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  function seg(id,cb){
+    var g=$(id);
+    g.addEventListener('click',function(e){
+      var b=e.target.closest('button');if(!b)return;
+      g.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});
+      cb();
+    });
+  }
+  function segVal(id){var b=$(id).querySelector('[aria-pressed="true"]');return b?b.dataset.v:null}
+  function defects(id){
+    var out={list:[],lv:'good'};
+    $(id).querySelectorAll('input[data-lv]:checked').forEach(function(c){out.list.push(c.value);out.lv=worst(out.lv,c.dataset.lv)});
+    return out;
+  }
+  function show(out,r){
+    out.className='verdict'+(r.level?' '+r.level:'');
+    out.innerHTML='<div class="big">'+esc(r.title)+'</div>'+(r.items.length?'<ul>'+r.items.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>':'');
+  }
+
+  /* ---------- site / recorder ---------- */
+  $('site').value=lsGet('kaitai.site'); $('by').value=lsGet('kaitai.by');
+  $('site').addEventListener('change',function(){lsSet('kaitai.site',this.value.trim());renderList()});
+  $('by').addEventListener('change',function(){lsSet('kaitai.by',this.value.trim())});
+  function curLoc(){return segVal('loc')||'A'}
+  function resetNos(){var l=curLoc();$('pNo').value=l+'-P1';$('bNo').value=l+'-B1';$('oNo').value=l+'-C1'}
+  (function(){var l=lsGet('kaitai.loc');if(/^[ABC]$/.test(l)){$('loc').querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.v===l?'true':'false')});resetNos();}})();
+  seg('loc',function(){lsSet('kaitai.loc',curLoc());resetNos();['p','b','o'].forEach(function(k){setStatus(k,'','')})});
+
+  /* ---------- panel ---------- */
+  var lastPreset=null;
+  function fillPreset(){
+    var t=$('pType').value,p=P[t],fixed=p&&!p.edit;
+    $('pVocN').readOnly=fixed;$('pIscN').readOnly=fixed;$('pModelWrap').hidden=fixed;
+    if(fixed){$('pVocN').value=p.voc;$('pIscN').value=p.isc;}
+    else if(lastPreset&&P[lastPreset]&&!P[lastPreset].edit){$('pVocN').value='';$('pIscN').value='';}
+    lastPreset=t;
+    judgePanel();
+  }
+  function calcPanel(){
+    var cond=segVal('pCond');
+    var vn=num('pVocN'),inn=num('pIscN'),v=num('pVoc'),i=num('pIsc'),ref=num('pRef');
+    var d=defects('pDef');
+    if(vn===null||v===null)return {level:'',title:'銘板Vocと測定Vocを入れてください',items:[],ready:false};
+    var items=[],lv='good';
+    if(v<0.5){lv='bad';items.push('電圧が出ていません。断線、またはコネクタの不良が考えられます。接続し直して、もう一度測ってください。');}
+    else if(v>vn*1.1){return {level:'warn',title:'数値を確認してください',items:['銘板のVocより高い値です。2枚を直列にしたまま測っていないか、型式が合っているかを確認してください。'],ready:true,auto:'warn'};}
+    else if(cond==='sun'){
+      var r=v/vn,vl=r>=0.85?'good':r>=0.6?'warn':'bad';lv=worst(lv,vl);
+      items.push('電圧 '+v+'V ＝ 銘板の'+pct(r)+' → '+LB[vl]);
+      if(vl==='bad')items.push('電圧が大きく低いです。セルの割れや、バイパスダイオードの故障が疑われます。');
+      if(i!==null&&inn){
+        var ri=i/inn,il=ri>=0.75?'good':ri>=0.55?'warn':'bad';lv=worst(lv,il);
+        items.push('電流 '+i+'A ＝ 銘板の'+pct(ri)+' → '+LB[il]);
+        if(il!=='good')items.push('電流が低いです。表面の汚れ、影、薄い雲がないかを確認し、快晴の昼にもう一度測ってください。');
+      } else items.push('電流（Isc）を入れると、出力も判定します。');
+    } else if(cond==='cloud'){
+      var r2=v/vn,cl=r2>=0.8?'good':r2>=0.6?'warn':'bad';lv=worst(lv,cl);
+      items.push('電圧 '+v+'V ＝ 銘板の'+pct(r2)+' → '+LB[cl]);
+      items.push('曇りや雨の日は、電流では判定しません。出力まで確かめるときは晴れた日に測ってください。');
+    } else {
+      if(ref){
+        var rr=v/ref,il2=rr>=0.8?'good':rr>=0.5?'warn':'bad';lv=worst(lv,il2);
+        items.push('基準品（'+ref+'V）の'+pct(rr)+' → '+LB[il2]);
+        if(il2==='warn')items.push('屋外でもう一度測って判定してください。');
+      } else {
+        var r3=v/vn,il3=r3>=0.45?'good':r3>=0.3?'warn':'bad';lv=worst(lv,il3);
+        items.push('電圧 '+v+'V ＝ 銘板の'+pct(r3)+' → '+LB[il3]+'（暫定）');
+        items.push('照明で値が変わります。同じ型式の良品を同じ場所で測って「基準品の室内Voc」に入れると確実です。実例では、発電するパネルが51%、発電不良のパネルが24%でした。');
+      }
+    }
+    if(d.list.length){lv=worst(lv,d.lv);items.push('外観：'+d.list.join('、')+' → '+LB[d.lv]);}
+    return {level:lv,title:HEAD[lv],items:items,ready:true,auto:lv};
+  }
+  function judgePanel(){$('pRefWrap').hidden=segVal('pCond')!=='indoor';show($('pOut'),calcPanel())}
+
+  /* ---------- battery ---------- */
+  function calcBattery(){
+    var ind=segVal('bInd'),v=num('bV'),r=num('bR'),ref=num('bRef'),d=defects('bDef');
+    var items=[],lv='good';
+    if(ind==='clear'){lv='bad';items.push('インジケータが白・透明なのは液不足のサインです。充電しても回復しません。電圧や内部抵抗がよく見えても交換対象です。');}
+    if(ind==='black'){lv=worst(lv,'warn');items.push('インジケータが黒なのは充電不足のサインです。充電してから、もう一度判定してください。');}
+    if(ind==='green')items.push('インジケータは緑（良）です。');
+    if(v!==null){
+      var vl=v>=12.4?'good':v>=12.0?'warn':'bad';lv=worst(lv,vl);
+      items.push('電圧 '+v+'V → '+LB[vl]+(vl==='warn'?'（充電不足。充電後にもう一度測る）':vl==='bad'?'（過放電。充電しても12.4Vまで戻らなければ不良）':''));
+    }
+    if(r!==null){
+      if(ref){var q=r/ref,rl=q<=1.25?'good':q<=1.5?'warn':'bad';lv=worst(lv,rl);items.push('内部抵抗 '+r+'mΩ ＝ 基準品の'+q.toFixed(2)+'倍 → '+LB[rl]);}
+      else items.push('内部抵抗は、同じ型式の良品の値を入れると判定できます。');
+    }
+    if(d.list.length){lv=worst(lv,d.lv);items.push('外観：'+d.list.join('、')+' → '+LB[d.lv]);}
+    if(!items.length)return {level:'',title:'インジケータの色と測定値を入れてください',items:[],ready:false};
+    return {level:lv,title:HEAD[lv],items:items,ready:true,auto:lv};
+  }
+  function judgeBattery(){show($('bOut'),calcBattery())}
+
+  /* ---------- other ---------- */
+  function calcOther(){
+    var d=defects('oDef'),worked=$('oWorked').checked,items=[],lv;
+    if(d.list.length){lv=d.lv==='good'?'warn':d.lv;items.push('外観：'+d.list.join('、')+' → '+LB[d.lv]);}
+    else lv=worked?'good':'warn';
+    if(!d.list.length&&worked)items.push('外観に異常がなく、解体前も正常に動いていました。');
+    if(!worked&&lv!=='bad')items.push('解体前の動作が分からないため、要確認にしています。あとで通電して確認してください。');
+    return {level:lv,title:HEAD[lv],items:items,ready:true,auto:lv};
+  }
+  function judgeOther(){show($('oOut'),calcOther())}
+
+  /* ---------- photos (compressed, stored with the record) ---------- */
+  var photos={p:[],b:[],o:[]};
+  function shrink(file){
+    return new Promise(function(res,rej){
+      var fr=new FileReader();
+      fr.onerror=rej;
+      fr.onload=function(){
+        var img=new Image();
+        img.onerror=rej;
+        img.onload=function(){
+          var max=1000,q=0.7,out='';
+          for(var t=0;t<6;t++){
+            var s=Math.min(1,max/Math.max(img.width,img.height));
+            var c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);
+            c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+            out=c.toDataURL('image/jpeg',q);
+            if(out.length<100000)break;
+            max=Math.round(max*0.82);q=Math.max(0.45,q-0.07);
+          }
+          res(out);
+        };
+        img.src=fr.result;
+      };
+      fr.readAsDataURL(file);
+    });
+  }
+  function bindPhotos(k){
+    var inp=$(k+'Photo'),box=$(k+'Thumbs');
+    inp.addEventListener('change',function(){
+      var files=Array.prototype.slice.call(inp.files||[]).slice(0,2);
+      photos[k]=[];box.innerHTML='';
+      Promise.all(files.map(shrink)).then(function(list){
+        photos[k]=list;
+        box.innerHTML=list.map(function(u,i){return '<img alt="写真'+(i+1)+'" src="'+u+'">'}).join('');
+      }).catch(function(){$(k+'Status').className='status ng';$(k+'Status').textContent='写真を読み込めませんでした。別の写真を選んでください。'});
+    });
+  }
+  ['p','b','o'].forEach(bindPhotos);
+
+  /* ---------- wiring ---------- */
+  seg('pCond',judgePanel);seg('bInd',judgeBattery);
+  $('pType').addEventListener('change',fillPreset);
+  ['pVocN','pIscN','pVoc','pIsc','pRef'].forEach(function(id){$(id).addEventListener('input',judgePanel)});
+  $('pDef').addEventListener('change',judgePanel);
+  ['bV','bR','bRef'].forEach(function(id){$(id).addEventListener('input',judgeBattery)});
+  $('bDef').addEventListener('change',judgeBattery);
+  $('oDef').addEventListener('change',judgeOther);
+  fillPreset();judgeBattery();judgeOther();
+
+  /* ---------- storage ---------- */
+  var db=null,records=[],dlApi=null,canWrite=true;
+  function nextNo(s){
+    var m=s.match(/^(.*?)(\d+)(\D*)$/);
+    if(!m)return s;
+    var n=String(parseInt(m[2],10)+1);
+    while(n.length<m[2].length)n='0'+n;
+    return m[1]+n+m[3];
+  }
+  function setStatus(k,cls,msg){var el=$(k+'Status');el.className='status '+cls;el.textContent=msg}
+  function buildDoc(k){
+    var site=$('site').value.trim(),by=$('by').value.trim(),base={site:site,loc:curLoc(),by:by,at:new Date().toISOString()};
+    var r,doc;
+    if(k==='p'){
+      r=calcPanel();if(!r.ready)return {err:'銘板Vocと測定Vocを入れてください。'};
+      var t=$('pType').value;
+      var pm=$('pModel').value.trim();
+      doc={kind:'panel',no:$('pNo').value.trim(),model:P[t]&&!P[t].edit?P[t].name:((P[t]?P[t].name+' ':'')+pm).trim(),
+        cond:{sun:'晴れ',cloud:'曇り・雨',indoor:'室内'}[segVal('pCond')],
+        vocN:num('pVocN'),iscN:num('pIscN'),voc:num('pVoc'),isc:num('pIsc'),refVoc:segVal('pCond')==='indoor'?num('pRef'):null,
+        defects:defects('pDef').list,memo:$('pMemo').value.trim()};
+      doc.detail='Voc '+doc.voc+'V / Isc '+(doc.isc==null?'-':doc.isc+'A')+'（'+doc.cond+'、銘板 '+doc.vocN+'V / '+doc.iscN+'A）';
+    } else if(k==='b'){
+      r=calcBattery();if(!r.ready)return {err:'インジケータの色と測定値を入れてください。'};
+      var ind={green:'緑',black:'黒',clear:'白・透明',none:'窓なし'}[segVal('bInd')];
+      doc={kind:'battery',no:$('bNo').value.trim(),model:$('bModel').value.trim(),ind:ind,
+        v:num('bV'),r:num('bR'),refR:num('bRef'),defects:defects('bDef').list,memo:$('bMemo').value.trim()};
+      doc.detail='インジケータ '+ind+' / '+(doc.v==null?'-':doc.v+'V')+' / '+(doc.r==null?'-':doc.r+'mΩ')+(doc.refR?'（基準 '+doc.refR+'mΩ）':'');
+    } else {
+      r=calcOther();
+      doc={kind:'other',no:$('oNo').value.trim(),model:($('oKind').value+' '+$('oModel').value.trim()).trim(),
+        worked:$('oWorked').checked,defects:defects('oDef').list,memo:$('oMemo').value.trim()};
+      doc.detail=(doc.worked?'解体前は正常動作':'解体前の動作は不明')+(doc.defects.length?' / '+doc.defects.join('、'):' / 外観異常なし');
+    }
+    if(!doc.no)return {err:'番号を入れてください。'};
+    var fin=$(k+'Final').value;
+    doc.autoVerdict=r.auto;doc.verdict=fin==='auto'?r.auto:fin;doc.photoCount=photos[k].length;
+    Object.keys(base).forEach(function(x){doc[x]=base[x]});
+    return {doc:doc};
+  }
+  var pendingDup={};
+  function save(k){
+    if(!db){setStatus(k,'ng','この画面では記録できません。');return;}
+    var b=buildDoc(k);
+    if(b.err){setStatus(k,'ng',b.err);return;}
+    var doc=b.doc;
+    if(!doc.site&&!pendingDup[k+'site']){pendingDup[k+'site']=1;setStatus(k,'ng','現場名が空です。ページ上部に入れてください（このまま保存する場合は、もう一度押してください）。');return;}
+    var dup=records.some(function(x){var d=x.data;return d.site===doc.site&&d.no===doc.no});
+    if(dup&&pendingDup[k]!==doc.no){pendingDup[k]=doc.no;setStatus(k,'ng','「'+doc.no+'」はこの現場ですでに記録されています。別の機器なら番号を変えてください（同じ番号で追加する場合は、もう一度押してください）。');return;}
+    pendingDup[k]=null;pendingDup[k+'site']=0;
+    var btn=$(k+'Save');btn.disabled=true;setStatus(k,'','保存しています…');
+    var imgs=photos[k].slice();
+    var ref=db.collection('records').doc();
+    function attempt(retry){
+      return ref.set(doc).then(function(){
+        if(imgs.length)return db.collection('photos').doc(ref.id).set({images:imgs,no:doc.no,site:doc.site});
+      }).catch(function(e){
+        if(e&&e.code==='unavailable'&&retry)return new Promise(function(r){setTimeout(r,600+Math.random()*600)}).then(function(){return attempt(false)});
+        throw e;
+      });
+    }
+    attempt(true).then(function(){
+      setStatus(k,'ok','記録しました：'+doc.no+'（'+LB[doc.verdict]+'）');
+      $(k+'No').value=nextNo(doc.no);
+      $(k+'Memo').value='';$(k+'Final').value='auto';
+      photos[k]=[];$(k+'Photo').value='';$(k+'Thumbs').innerHTML='';
+    }).catch(function(e){
+      var c=e&&e.code;
+      if(c==='quota_exceeded')setStatus(k,'ng','端末の保存容量がいっぱいです。CSVを送ったあと、古い記録を削除してください。');
+      else setStatus(k,'ng','保存できませんでした。もう一度押してください。');
+    }).then(function(){btn.disabled=false});
+  }
+  ['p','b','o'].forEach(function(k){$(k+'Save').addEventListener('click',function(){save(k)})});
+
+  /* ---------- list ---------- */
+  function currentFilter(){return {site:$('fSite').value,kind:$('fKind').value}}
+  function filtered(){
+    var f=currentFilter();
+    return records.filter(function(x){var d=x.data;return (f.site==='*'||d.site===f.site)&&(!f.kind||d.kind===f.kind)});
+  }
+  var userPicked=false;
+  function refreshSites(){
+    var sel=$('fSite'),prev=sel.value,sites={};
+    records.forEach(function(x){sites[x.data.site||'']=1});
+    var mine=$('site').value.trim();
+    var opts=['<option value="*">すべての現場</option>'];
+    Object.keys(sites).sort().forEach(function(s){opts.push('<option value="'+esc(s)+'">'+esc(s||'（現場名なし）')+'</option>')});
+    sel.innerHTML=opts.join('');
+    if(userPicked&&prev&&(prev==='*'||sites.hasOwnProperty(prev)))sel.value=prev;
+    else sel.value=sites.hasOwnProperty(mine)?mine:'*';
+  }
+  function fmt(at){try{return new Date(at).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}catch(e){return at}}
+  function renderList(){
+    if(!db)return;
+    refreshSites();
+    var list=filtered(),c={good:0,warn:0,bad:0};
+    list.forEach(function(x){if(c.hasOwnProperty(x.data.verdict))c[x.data.verdict]++});
+    $('cGood').textContent=c.good;$('cWarn').textContent=c.warn;$('cBad').textContent=c.bad;
+    $('filters').hidden=false;$('summary').hidden=false;
+    renderLoc(list);
+    if(!records.length){$('dbNotice').hidden=false;$('dbNotice').textContent='まだ記録がありません。上の判定ツールで「記録する」を押すと、ここに表示されます。';}
+    else $('dbNotice').hidden=true;
+    $('reclist').innerHTML=list.map(function(x){
+      var d=x.data,v=rank.hasOwnProperty(d.verdict)?d.verdict:'warn';
+      var changed=d.autoVerdict&&d.autoVerdict!==d.verdict?' <span class="meta">（自動判定：'+LB[d.autoVerdict]+'）</span>':'';
+      return '<div class="rec '+v+'" data-id="'+esc(x.id)+'">'+
+        '<div class="top"><span class="no">'+esc(d.no)+'</span><span class="pill '+v+'">'+LB[v]+'</span>'+changed+'<span class="meta">'+esc(KIND[d.kind]||'')+' ・ '+esc(d.model||'型式不明')+'</span></div>'+
+        '<div class="val">'+esc(d.detail||'')+(d.defects&&d.defects.length&&d.kind!=='other'?' / 外観：'+esc(d.defects.join('、')):'')+'</div>'+
+        (d.memo?'<div class="val">メモ：'+esc(d.memo)+'</div>':'')+
+        '<div class="meta">'+esc(d.site||'（現場名なし）')+(d.loc?' '+esc(d.loc)+'地点':'')+' ・ '+esc(fmt(d.at))+' ・ '+esc(d.by||'記録者なし')+'</div>'+
+        '<div class="thumbs" data-ph></div>'+
+        '<div class="acts">'+(d.photoCount?'<button type="button" class="btn ghost" data-act="ph">写真を見る（'+d.photoCount+'枚）</button>':'')+
+        (canWrite?'<button type="button" class="btn danger" data-act="del">削除</button>':'')+'</div>'+
+      '</div>';
+    }).join('');
+  }
+  function pill(v){return '<span class="pill '+v+'">'+LB[v]+'</span>'}
+  function renderLoc(list){
+    var groups={},order=[];
+    list.forEach(function(x){
+      var d=x.data,key=(d.site||'')+'\u0000'+(d.loc||'-');
+      if(!groups[key]){groups[key]={site:d.site||'',loc:d.loc||'-',panel:[],battery:[],other:[]};order.push(key)}
+      if(groups[key][d.kind])groups[key][d.kind].push(d);
+    });
+    if(!order.length){$('locbox').hidden=true;return;}
+    order.sort();
+    var multi=$('fSite').value==='*';
+    function byNo(a,b){return String(a.no).localeCompare(String(b.no),'ja',{numeric:true})}
+    function cnt(arr,need){var ok=arr.length>=need;return '<b class="'+(ok?'':'')+'">'+arr.length+'/'+need+'</b>'+(ok?'':' <span class="pill warn">不足</span>')}
+    var rows=order.map(function(key){
+      var g=groups[key];g.panel.sort(byNo);g.battery.sort(byNo);
+      var pc=cnt(g.panel,2)+'<br>'+g.panel.map(function(d){return esc(d.no)+' '+pill(d.verdict)+' <span class="meta">Voc '+(d.voc==null?'-':d.voc)+' / Isc '+(d.isc==null?'-':d.isc)+'</span>'}).join('<br>');
+      if(g.panel.length===2){
+        var a=g.panel[0],b=g.panel[1],notes=[];
+        if(a.voc&&b.voc){var dv=Math.abs(a.voc-b.voc)/Math.max(a.voc,b.voc);if(dv>=0.1)notes.push('Voc差 '+pct(dv))}
+        if(a.isc&&b.isc&&a.cond==='晴れ'&&b.cond==='晴れ'){var di=Math.abs(a.isc-b.isc)/Math.max(a.isc,b.isc);if(di>=0.1)notes.push('Isc差 '+pct(di))}
+        if(notes.length)pc+='<br><span class="pill warn">2枚の差が大きい</span><span class="meta">'+notes.join('、')+' → 低いほうを要確認</span>';
+      }
+      var bc=cnt(g.battery,2)+'<br>'+g.battery.map(function(d){return esc(d.no)+' '+pill(d.verdict)+' <span class="meta">'+(d.v==null?'-':d.v+'V')+' / '+(d.r==null?'-':d.r+'mΩ')+'</span>'}).join('<br>');
+      if(g.battery.length===2){
+        var x=g.battery[0],y=g.battery[1],bn=[];
+        if(x.v!=null&&y.v!=null&&Math.abs(x.v-y.v)>=0.2)bn.push('電圧差 '+Math.abs(x.v-y.v).toFixed(2)+'V');
+        if(x.r&&y.r&&Math.max(x.r,y.r)/Math.min(x.r,y.r)>=1.25)bn.push('内部抵抗 '+(Math.max(x.r,y.r)/Math.min(x.r,y.r)).toFixed(2)+'倍');
+        if(bn.length)bc+='<br><span class="pill warn">2台の差が大きい</span><span class="meta">'+bn.join('、')+' → 悪いほうを要確認</span>';
+      }
+      var oc=g.other.length?g.other.length+'台<br>'+g.other.map(function(d){return esc(d.no)+' '+pill(d.verdict)}).join('<br>'):'0台';
+      return '<tr><td><b>'+esc(g.loc)+'地点</b>'+(multi?'<br><span class="meta">'+esc(g.site||'現場名なし')+'</span>':'')+'</td><td>'+pc+'</td><td>'+bc+'</td><td>'+oc+'</td></tr>';
+    });
+    $('loctable').innerHTML='<thead><tr><th>地点</th><th>パネル（2枚）</th><th>バッテリー（2台）</th><th>その他</th></tr></thead><tbody>'+rows.join('')+'</tbody>';
+    $('locbox').hidden=false;
+  }
+  $('fSite').addEventListener('change',function(){userPicked=true;renderList()});$('fKind').addEventListener('change',renderList);
+  $('reclist').addEventListener('click',function(e){
+    var b=e.target.closest('button[data-act]');if(!b)return;
+    var card=b.closest('.rec'),id=card.dataset.id;
+    if(b.dataset.act==='ph'){
+      b.disabled=true;
+      db.collection('photos').doc(id).get().then(function(s){
+        var imgs=s.exists&&s.data().images||[];
+        card.querySelector('[data-ph]').innerHTML=imgs.length?imgs.map(function(u,i){return '<img alt="記録写真'+(i+1)+'" src="'+esc(u)+'">'}).join(''):'<span class="meta">写真が見つかりません</span>';
+        b.remove();
+      }).catch(function(){b.disabled=false});
+    }
+    if(b.dataset.act==='del'){
+      if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='本当に削除する';setTimeout(function(){if(b.isConnected){b.dataset.armed='';b.textContent='削除'}},4000);return;}
+      b.disabled=true;
+      db.collection('records').doc(id).delete().then(function(){return db.collection('photos').doc(id).delete()}).catch(function(){b.disabled=false;b.textContent='削除できませんでした'});
+    }
+  });
+
+  function csvCell(v){v=v==null?'':String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+  function buildCsv(){
+    var head=['現場','地点','番号','種類','型式','判定','自動判定','条件','銘板Voc','銘板Isc','測定Voc','測定Isc','基準Voc','インジケータ','電圧','内部抵抗','基準内部抵抗','外観','メモ','記録者','日時','写真枚数'];
+    var rows=filtered().map(function(x){var d=x.data;return [d.site,d.loc,d.no,KIND[d.kind],d.model,LB[d.verdict],LB[d.autoVerdict],d.cond,d.vocN,d.iscN,d.voc,d.isc,d.refVoc,d.ind,d.v,d.r,d.refR,(d.defects||[]).join('、'),d.memo,d.by,d.at,d.photoCount]});
+    var csv='﻿'+[head].concat(rows).map(function(r){return r.map(csvCell).join(',')}).join('\r\n');
+    var f=currentFilter(),name='解体記録_'+(f.site==='*'?'全現場':f.site||'現場名なし')+'_'+new Date().toISOString().slice(0,10)+'.csv';
+    return {name:name.replace(/[\\\/:*?"<>|]/g,'_'),blob:new Blob([csv],{type:'text/csv'})};
+  }
+  function csvMsg(t){$('csvNote').hidden=!t;$('csvNote').textContent=t||''}
+  $('csvBtn').addEventListener('click',function(){
+    if(!records.length){csvMsg('まだ記録がありません。');return;}
+    var c=buildCsv(),a=document.createElement('a');
+    a.href=URL.createObjectURL(c.blob);a.download=c.name;document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1000);
+    csvMsg('');
+  });
+  (function(){
+    try{
+      var probe=new File(['x'],'t.csv',{type:'text/csv'});
+      if(navigator.share&&navigator.canShare&&navigator.canShare({files:[probe]}))$('shareBtn').hidden=false;
+    }catch(e){}
+  })();
+  $('shareBtn').addEventListener('click',function(){
+    if(!records.length){csvMsg('まだ記録がありません。');return;}
+    var c=buildCsv(),file=new File([c.blob],c.name,{type:'text/csv'});
+    navigator.share({files:[file],title:c.name}).then(function(){csvMsg('')}).catch(function(e){
+      if(e&&e.name==='AbortError')return;
+      csvMsg('送れませんでした。「CSVで保存」で保存してから送ってください。');
+    });
+  });
+
+  /* ---------- on-device store (IndexedDB) ---------- */
+  function makeLocalDb(){
+    return new Promise(function(res,rej){
+      var rq=indexedDB.open('kaitai-records',1);
+      rq.onupgradeneeded=function(){var d=rq.result;['records','photos'].forEach(function(n){if(!d.objectStoreNames.contains(n))d.createObjectStore(n,{keyPath:'id'})})};
+      rq.onerror=function(){rej(rq.error)};
+      rq.onsuccess=function(){
+        var idb=rq.result,listeners=[];
+        function tx(store,mode,fn){return new Promise(function(ok,ng){
+          var t=idb.transaction(store,mode),r=fn(t.objectStore(store));
+          t.oncomplete=function(){ok(r&&r.result)};
+          t.onerror=function(){var e=t.error||{};ng({code:e.name==='QuotaExceededError'?'quota_exceeded':'unavailable'})};
+          t.onabort=t.onerror;
+        })}
+        function notify(){listeners.forEach(function(fn){fn()})}
+        function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+        function collection(name){
+          return {
+            doc:function(id){
+              id=id||genId();
+              return {id:id,
+                set:function(data){return tx(name,'readwrite',function(s){return s.put({id:id,data:data})}).then(notify)},
+                get:function(){return tx(name,'readonly',function(s){return s.get(id)}).then(function(r){return {exists:!!r,data:function(){return r&&r.data}}})},
+                delete:function(){return tx(name,'readwrite',function(s){return s.delete(id)}).then(notify)}
+              };
+            },
+            onSnapshot:function(next,err){
+              var run=function(){tx(name,'readonly',function(s){return s.getAll()}).then(function(rows){
+                rows=rows||[];rows.sort(function(a,b){return String(b.data.at).localeCompare(String(a.data.at))});
+                next({docs:rows.map(function(r){return {id:r.id,data:function(){return r.data}}})});
+              }).catch(err)};
+              listeners.push(run);run();
+              return function(){listeners=listeners.filter(function(f){return f!==run})};
+            }
+          };
+        }
+        res({collection:collection});
+      };
+    });
+  }
+  function noDb(){
+    db=null;
+    $('dbNotice').hidden=false;
+    $('dbNotice').textContent='このブラウザでは記録を保存できません（プライベートモードなど）。判定ツールは使えます。結果は写真に撮って担当者に送ってください。';
+    ['p','b','o'].forEach(function(k){$(k+'Save').disabled=true});
+  }
+  if(!window.indexedDB){noDb();return;}
+  makeLocalDb().then(function(d){
+    db=d;
+    db.collection('records').onSnapshot(function(s){
+      records=s.docs.map(function(x){return {id:x.id,data:x.data()}});
+      renderList();
+    },function(){noDb();});
+  },noDb);
+})();
+</script>
+</body>
+</html>
