@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1f3a5f">
+<title>盤図リスト作成</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo">盤</span><div class="bt"><h1>盤図リスト作成</h1><p>完成図PDF → 絶縁抵抗測定表・チェックリスト（B02〜B08）</p></div><a class="home" href="../">ツール一覧</a></div>
+  <nav class="steps" id="steps">
+    <button data-step="settings" class="on">① 設定</button>
+    <button data-step="pdf">② 盤図PDF</button>
+    <button data-step="mid">③ 中間リスト</button>
+    <button data-step="out">④ 書式出力</button>
+  </nav>
+</header>
+
+<main>
+<!-- ① 設定 -->
+<section id="s-settings" class="step on">
+  <!-- テスト用データは公開サイトに置かず、手元のZIPから読み込む（このPC版は sample/ を同梱） -->
+  <div class="card test" id="testCard">
+    <h2>テスト（APIキーなし・0円）</h2>
+    <p class="note">APIキーなしでアプリを試せます。テスト用データのZIP（社内書式・中間リスト・読み取り済みデータ・盤図PDF）を選ぶと、まとめて読み込みます。③ 中間リスト → ④ 書式出力 の流れを確認できます。</p>
+    <div class="row">
+      <label class="btn primary"><input id="sampleZip" type="file" accept=".zip,application/zip,application/x-zip-compressed" hidden>テスト用データ（ZIP）を選ぶ</label>
+      <button id="loadSample" class="btn hidden">同梱のテスト用データを読み込む</button>
+    </div>
+    <label class="check hidden" id="testModeRow"><input type="checkbox" id="testMode"> テストモード（② 盤図PDF の「AIでページ判定」「読み取り」を、読み取り済みデータで代用する）</label>
+    <p id="sampleStatus" class="status"></p>
+  </div>
+
+  <div class="card">
+    <h2>Claude APIキー</h2>
+    <p class="note">図面の読み取りに使います。キーはこの端末のブラウザ内だけに保存され、Anthropic（Claude）以外には送信しません。料金はキーの持ち主のアカウントに従量課金されます。</p>
+    <div class="row">
+      <input id="apiKey" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-…">
+      <button id="saveKey" class="btn primary">保存</button>
+    </div>
+    <label class="check"><input type="checkbox" id="rememberKey"> この端末に保存する（オフならブラウザを閉じると消えます）</label>
+    <p id="keyStatus" class="status"></p>
+  </div>
+
+  <div class="card">
+    <h2>読み取りの設定</h2>
+    <div class="grid2">
+      <label>図面の読み取りモデル<select id="model"></select></label>
+      <label>精度<select id="effort">
+        <option value="high">高（おすすめ）</option>
+        <option value="medium">中（安い・速い）</option>
+        <option value="low">低（下書き用）</option>
+      </select></label>
+      <label>ページ判定のモデル<select id="clsModel"></select></label>
+    </div>
+    <p class="note">目安: Claude Opus 5 で結線図1ページあたり約 $0.3（約45円）。ページ判定は1ページあたり約1円です。</p>
+  </div>
+
+  <div class="card">
+    <h2>社内書式（B02〜B08）</h2>
+    <p class="note">「B02_低圧幹線絶縁抵抗測定表.xlsx」などの書式ファイルをまとめて選んでください。ファイル名の先頭（B02〜B08）で自動で振り分けます。書式はこの端末内にだけ保存され、アプリ本体（公開サイト）には含まれません。</p>
+    <label class="btn"><input id="tplInput" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple hidden>書式ファイルを選ぶ</label>
+    <ul id="tplList" class="tpl"></ul>
+  </div>
+
+  <div class="card">
+    <h2>共通（全ページのヘッダ）</h2>
+    <div class="grid2">
+      <label>工事名称<input id="c-工事名称" type="text"></label>
+      <label>立会者<input id="c-立会者" type="text"></label>
+      <label>実施者<input id="c-実施者" type="text"></label>
+      <label>年号<input id="c-年号" type="text" value="令和"></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>データ</h2>
+    <p class="note">作業内容（ページ判定・読み取り結果・中間リスト）はこの端末に自動保存されます。PDF本体は保存しないので、続きの作業では同じPDFを選び直してください。</p>
+    <div class="row">
+      <button id="resetProject" class="btn danger">新しい現場を始める（作業内容を消去）</button>
+    </div>
+  </div>
+</section>
+
+<!-- ② 盤図PDF -->
+<section id="s-pdf" class="step">
+  <div class="card">
+    <h2>盤図PDF</h2>
+    <p class="note">キュービクル（CUB）・動力盤・分電盤の完成図PDFを選んでください（複数可）。① AIでページを判定 → ② 種類と盤名を確認・修正 → ③ 読み取り、の順に進めます。初めての現場では、まず1ページだけ読み取り対象にして試すのがおすすめです。</p>
+    <label class="btn primary"><input id="pdfInput" type="file" accept="application/pdf,.pdf" multiple hidden>PDFを選ぶ</label>
+    <div id="pdfList"></div>
+  </div>
+  <div id="pdfPanel" class="card hidden">
+    <div class="toolbar">
+      <select id="pdfSel"></select>
+      <select id="pageFilter">
+        <option value="all">全ページ</option>
+        <option value="target">読み取り対象のみ</option>
+        <option value="todo">未判定のみ</option>
+      </select>
+      <button id="classifyBtn" class="btn">AIでページ判定</button>
+    </div>
+    <details class="range">
+      <summary>ページ範囲をまとめて設定</summary>
+      <div class="row">
+        <input id="rgFrom" type="number" min="1" placeholder="開始"> 〜 <input id="rgTo" type="number" min="1" placeholder="終了">
+        <select id="rgKind"><option>対象外</option><option>分電盤</option><option>動力盤</option><option>CUB</option></select>
+        <input id="rgPanel" type="text" placeholder="盤名（空欄なら変更しない）">
+        <button id="rgApply" class="btn">設定</button>
+      </div>
+    </details>
+    <div id="thumbs" class="thumbs"></div>
+  </div>
+</section>
+
+<!-- ③ 中間リスト -->
+<section id="s-mid" class="step">
+  <div class="card">
+    <div class="toolbar">
+      <button id="buildMid" class="btn primary">読み取り結果から作成</button>
+      <label class="btn"><input id="midInput" type="file" accept=".xlsx" hidden>xlsxを読み込む</label>
+      <button id="midSave" class="btn">xlsxで保存</button>
+    </div>
+    <p class="note">ここで直した内容がB02〜B08に反映されます。黄色の「区分」で出力先を切り替えます（予備・除外はチェックリストに出しません）。</p>
+    <nav class="tabs" id="midTabs"></nav>
+    <div class="toolbar">
+      <select id="midPanel"></select>
+      <input id="midSearch" type="search" placeholder="絞り込み（名称・番号など）">
+      <button id="midAdd" class="btn">＋ 行を追加</button>
+    </div>
+    <div class="tablewrap"><table id="midTable" class="grid"></table></div>
+    <p id="midInfo" class="note"></p>
+  </div>
+</section>
+
+<!-- ④ 書式出力 -->
+<section id="s-out" class="step">
+  <div class="card">
+    <h2>社内書式を作成</h2>
+    <p class="note">盤ごとにシートを分け、A4 1枚分の書式を縦に並べて改ページします。iPadでは「ファイル」アプリに保存され、Excel for iPad で開いて印刷できます。</p>
+    <div id="outList" class="outlist"></div>
+    <div class="row"><button id="outZip" class="btn primary">まとめてZIPで保存</button></div>
+    <p id="outStatus" class="status"></p>
+  </div>
+</section>
+</main>
+
+<footer class="runbar hidden" id="runbar">
+  <div class="runinfo"><b id="runTitle"></b><span id="runText"></span></div>
+  <div class="bar"><i id="runBar"></i></div>
+  <button id="runStop" class="btn danger">中止</button>
+</footer>
+
+<div id="actionbar" class="actionbar hidden">
+  <span id="actText"></span>
+  <button id="readBtn" class="btn primary">読み取り開始</button>
+</div>
+
+<dialog id="viewer">
+  <div class="vhead"><b id="vTitle"></b><button id="vZoom" class="btn">拡大</button><button id="vClose" class="btn">閉じる</button></div>
+  <div class="vbody"><img id="vImg" alt=""></div>
+</dialog>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
