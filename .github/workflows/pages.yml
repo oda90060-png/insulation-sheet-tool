@@ -1,0 +1,39 @@
+# GitHub Pages: 解体機器の良否判定（solar/）とツール一覧だけを公開する。
+# 盤図の2ツール（list/・insulation/）は GitLab へ移転した。ファイルはバックアップとしてこのリポジトリに残し、
+# 旧アドレスには移転先へ案内するページだけを置く。
+name: Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: 公開するファイルを集める
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          cp -r solar _site/
+          moved() {
+            mkdir -p "_site/$1"
+            printf '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s（移転しました）</title><meta http-equiv="refresh" content="0; url=%s"><p style="font-family:sans-serif;padding:16px">%s は <a href="%s">%s</a> に移転しました。</p>\n' "$2" "$3" "$2" "$3" "$3" > "_site/$1/index.html"
+          }
+          moved list "盤図リスト作成" "https://banzu-list-7a0613.gitlab.io/"
+          moved insulation "盤図から絶縁測定表" "https://banzu-insulation-23dd24.gitlab.io/"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
